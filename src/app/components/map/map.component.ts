@@ -1,12 +1,14 @@
-import { AfterViewInit, Component } from '@angular/core';
-import { Map as GLMap } from 'mapbox-gl';
+import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
+import { along, length, LineString } from '@turf/turf';
+import { GeoJSONSource, Map as GLMap } from 'mapbox-gl';
 import { testField } from '../../constants/harvest-field';
 import { mapStyle } from '../../constants/map-config.constants';
 
 @Component({
   selector: 'app-map',
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.scss']
+  styleUrls: ['./map.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MapComponent implements AfterViewInit {
   private readonly FIELD_SOURCE = 'field'
@@ -41,6 +43,7 @@ export class MapComponent implements AfterViewInit {
 
   private onMapLoad(): void {
     this.drawField();
+    this.testAlong();
   }
 
   private drawField(): void {
@@ -76,5 +79,53 @@ export class MapComponent implements AfterViewInit {
         'line-width': 3
       }
     });
+  }
+
+  private testAlong(): void {
+    this.map.addSource('somePoint', {
+      'type': 'geojson',
+      'data': {
+        properties: null,
+        'type': 'Feature',
+        'geometry': {
+          'type': 'Point',
+          'coordinates': testField[0],
+        }
+      }
+    });
+    const source = this.map.getSource('somePoint') as GeoJSONSource
+
+    const lineString: LineString = {
+      type: 'LineString',
+      coordinates: testField,
+    }
+
+    const fieldPerimeter = length({'type': 'Feature', properties: null, geometry: lineString });
+
+    this.map.addLayer({
+      'id': 'population',
+      'type': 'circle',
+      'source': 'somePoint',
+      'paint': {
+      'circle-radius': 5,
+      'circle-color': 'blue'
+      }
+    });
+
+
+    const step = 0.005;
+    for (let i = 0; i < fieldPerimeter; i += step) {
+      const somePoint = along(lineString, i);
+      source.setData(somePoint);
+    }
+    this.animate(lineString, source, fieldPerimeter, step)
+  }
+
+  private animate(lineString: LineString, source: GeoJSONSource, perimeter: number, step: number, current = 0): void {
+    const somePoint = along(lineString, current);
+    source.setData(somePoint);
+    if (step < perimeter) {
+      requestAnimationFrame(() => this.animate(lineString, source, perimeter, step, current + step));
+    }
   }
 }
