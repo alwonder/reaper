@@ -1,5 +1,7 @@
-import { latLngToKm } from './coordinates-convertor.util';
+import { latLngToKm, toPoint } from './coordinates-convertor.util';
 import { getMultiplePointsDistance } from './km.utils';
+import { getEarthPointsDistanceInKm } from './lat-lng.utils';
+import * as turf from '@turf/turf';
 
 const testCoords = [
   {
@@ -32,9 +34,16 @@ const testCoords = [
   }
 ]
 
+const points = testCoords.map((coord) => toPoint(coord));
+
 describe('Km Utils', () => {
   it('should calculate correct distance', () => {
     const kmCoords = testCoords.map((coord) => latLngToKm(coord));
     expect(getMultiplePointsDistance(kmCoords)).toEqual(11.358)
+  })
+
+  it('should ывыввыфаыва афываыв distance', () => {
+    expect(getEarthPointsDistanceInKm(testCoords[0], testCoords[1])).toEqual(0.917349211513144)
+    expect(turf.distance(points[0], points[1])).toEqual(0.9179267942866816)
   })
 });
