@@ -1,9 +1,10 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
+import { LineString } from '@turf/turf';
 import * as turf from '@turf/turf';
 import { GeoJSONSource, Map as GLMap } from 'mapbox-gl';
 import { testField } from '../../constants/harvest-field';
 import { mapStyle } from '../../constants/map-config.constants';
-import { getFieldParallels } from '../../utils/route-creator.util';
+import { getFieldRoute } from '../../utils/route-creator.util';
 
 @Component({
   selector: 'app-map',
@@ -46,8 +47,8 @@ export class MapComponent implements AfterViewInit {
 
   private onMapLoad(): void {
     this.drawField();
-    this.testParallels();
-    this.testAlong();
+    const route = this.drawRoute();
+    this.testAlong(route);
   }
 
   private drawField(): void {
@@ -85,18 +86,13 @@ export class MapComponent implements AfterViewInit {
     });
   }
 
-  private testParallels() {
-    const distance = 0.05; // 50m
-    const parallels = getFieldParallels(testField, [testField[0], testField[1]], distance)
+  private drawRoute(): turf.Feature<LineString> {
+    const distance = 0.01; // 10m
+    const route = getFieldRoute(testField, [testField[0], testField[1]], distance)
 
     this.map.addSource('scaled', {
       'type': 'geojson',
-      'data': {
-        properties: null,
-        'type': 'FeatureCollection',
-        // @ts-expect-error
-        features: parallels.features
-      }
+      'data': route
     });
 
     this.map.addLayer({
@@ -109,9 +105,11 @@ export class MapComponent implements AfterViewInit {
         'line-width': 3
       }
     });
+
+    return route;
   }
 
-  private testAlong(): void {
+  private testAlong(lineString: turf.Feature<LineString>): void {
     this.map.addSource('somePoint', {
       'type': 'geojson',
       'data': {
@@ -119,18 +117,14 @@ export class MapComponent implements AfterViewInit {
         'type': 'Feature',
         'geometry': {
           'type': 'Point',
-          'coordinates': testField[0],
+          'coordinates': lineString.geometry.coordinates[0],
         }
       }
     });
     const source = this.map.getSource('somePoint') as GeoJSONSource
 
-    const lineString: turf.LineString = {
-      type: 'LineString',
-      coordinates: testField,
-    }
 
-    const fieldPerimeter = turf.length({'type': 'Feature', properties: null, geometry: lineString });
+    const fieldPerimeter = turf.length(lineString);
 
     this.map.addLayer({
       'id': 'population',
@@ -148,7 +142,7 @@ export class MapComponent implements AfterViewInit {
       const somePoint = turf.along(lineString, i);
       source.setData(somePoint);
     }
-    this.animate(lineString, source, fieldPerimeter, step)
+    this.animate(lineString.geometry, source, fieldPerimeter, step)
   }
 
   private animate(lineString: turf.LineString, source: GeoJSONSource, perimeter: number, step: number, current = 0): void {

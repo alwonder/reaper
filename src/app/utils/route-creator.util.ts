@@ -16,20 +16,7 @@ import {
 } from '@turf/turf';
 import { MapPoint } from '../types/map.types';
 
-/**
- * Возвращает обрезанную по краям поля линию
- * @param nextLine
- * @param polyFeature
- * @param distance
- */
-function getFieldLine(nextLine: Feature<LineString>, polyFeature: Feature<Polygon>, distance: number): Feature<LineString> {
-  const scaledLine = transformScale(nextLine, 10);
-  const intersect = lineIntersect(scaledLine, polyFeature);
-  const edgeLine = lineString([intersect.features[0]!.geometry.coordinates, intersect.features[1]!.geometry.coordinates])
-  return getMarginLine(edgeLine, distance);
-}
-
-export const getFieldParallels = (field: MapPoint[], line: [MapPoint, MapPoint], distance: number): FeatureCollection => {
+export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], distance: number): Feature<LineString> => {
   const polyFeature = polygon([field]);
   const direction = getDirection(field, [field[0], field[1]]);
   const firstLine = getParallelLine(line, distance, direction)
@@ -49,7 +36,12 @@ export const getFieldParallels = (field: MapPoint[], line: [MapPoint, MapPoint],
     }
   }
 
-  return featureCollection(lines);
+  const path = connectLines(featureCollection(lines));
+  return path;
+  // return bezierSpline(path, {
+  //   resolution: 400000,
+  //   sharpness: 0.01
+  // })
 }
 
 export const getDirection = (field: MapPoint[], line: [MapPoint, MapPoint]): 'left' | 'right' => {
@@ -68,8 +60,34 @@ export const getParallelLine = (line: Position[], distance: number, pos: 'left' 
   return lineString([newPoint1.geometry.coordinates, newPoint2.geometry.coordinates]);
 }
 
+/**
+ * Возвращает обрезанную по краям поля линию
+ * @param nextLine
+ * @param polyFeature
+ * @param distance
+ */
+function getFieldLine(nextLine: Feature<LineString>, polyFeature: Feature<Polygon>, distance: number): Feature<LineString> {
+  const scaledLine = transformScale(nextLine, 10);
+  const intersect = lineIntersect(scaledLine, polyFeature);
+  const edgeLine = lineString([intersect.features[0]!.geometry.coordinates, intersect.features[1]!.geometry.coordinates])
+  return getMarginLine(edgeLine, distance);
+}
+
 export const getMarginLine = (line: Feature<LineString>, distance: number): Feature<LineString> => {
   const point1 = along(line, distance);
   const point2 = along(lineString([line.geometry.coordinates[1], line.geometry.coordinates[0]]), distance);
   return lineString([point1.geometry.coordinates, point2.geometry.coordinates]);
+}
+
+export const connectLines = (lines: FeatureCollection<LineString>): Feature<LineString> => {
+  const points: Position[] = [];
+  lines.features.forEach((feature, index) => {
+    if (index % 2 === 0) {
+      points.push(feature.geometry.coordinates[1], feature.geometry.coordinates[0]);
+    } else {
+      points.push(feature.geometry.coordinates[0], feature.geometry.coordinates[1]);
+    }
+  })
+
+  return lineString(points)
 }
