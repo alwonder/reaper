@@ -37,7 +37,7 @@ export class CombineProcessingService {
   constructor() { }
 
   /** Вычислить рабочую ширину захвата уборочной машины */
-  private getCaptureWorkingWidth(): number {
+  public getCaptureWorkingWidth(): number {
     return this.captureConstructionWidth * this.captureUsageCoefficient;
   }
 

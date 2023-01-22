@@ -1,11 +1,11 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
-import { lineSliceAlong, lineString, LineString } from '@turf/turf';
+import { length, lineSliceAlong, lineString, LineString } from '@turf/turf';
 import * as turf from '@turf/turf';
 import { GeoJSONSource, Map as GLMap } from 'mapbox-gl';
 import { testField } from '../../constants/harvest-field';
 import { mapStyle } from '../../constants/map-config.constants';
 import { CombineProcessingService, CombineSensorsData } from '../../services/combine-processing.service';
-import { getFieldRoute } from '../../utils/route-creator.util';
+import { HarvestFieldService } from '../../services/harvest-field.service';
 
 @Component({
   selector: 'app-map',
@@ -22,7 +22,8 @@ export class MapComponent implements AfterViewInit {
   public map!: GLMap;
 
   constructor(
-    private combineProcessingService: CombineProcessingService
+    private combineProcessingService: CombineProcessingService,
+    private harvestFieldService: HarvestFieldService,
   ) {
   }
 
@@ -96,12 +97,23 @@ export class MapComponent implements AfterViewInit {
   }
 
   private drawRoute(): turf.Feature<LineString> {
-    const distance = 0.01; // 10m
-    const route = getFieldRoute(testField, [testField[3], testField[4]], distance)
+    this.harvestFieldService.startLine = [
+      this.harvestFieldService.field[4],
+      this.harvestFieldService.field[5],
+    ]
+    const fieldRoute = this.harvestFieldService.calculateFieldRoute();
+    const calculatedData = this.combineProcessingService.calculateData({
+      velocity: 6.5,
+      bunkerFullness: 10,
+      harvest: 1.45,
+    });
+
+    const overallDistance = length(fieldRoute);
 
     const perimeter = lineString(testField);
-    const line1 = lineSliceAlong(route, 0, 20)
-    const line2 = lineSliceAlong(route, 20, 44)
+    const completed = lineSliceAlong(fieldRoute, 0, 20)
+    const tillFill = lineSliceAlong(fieldRoute, 20, 20 + calculatedData.performance)
+    const restDistance = lineSliceAlong(fieldRoute, 20 + calculatedData.performance, overallDistance);
 
     this.map.addSource('perimeter', {
       'type': 'geojson',
@@ -121,7 +133,7 @@ export class MapComponent implements AfterViewInit {
 
     this.map.addSource('scaled1', {
       'type': 'geojson',
-      'data': line1
+      'data': completed
     });
 
     this.map.addLayer({
@@ -137,7 +149,7 @@ export class MapComponent implements AfterViewInit {
 
     this.map.addSource('scaled2', {
       'type': 'geojson',
-      'data': line2
+      'data': tillFill
     });
 
     this.map.addLayer({
@@ -153,7 +165,7 @@ export class MapComponent implements AfterViewInit {
 
     this.map.addSource('scaled3', {
       'type': 'geojson',
-      'data': route
+      'data': restDistance
     });
 
     this.map.addLayer({
@@ -167,7 +179,7 @@ export class MapComponent implements AfterViewInit {
       }
     });
 
-    return route;
+    return fieldRoute;
   }
 
   private testAlong(lineString: turf.Feature<LineString>): void {

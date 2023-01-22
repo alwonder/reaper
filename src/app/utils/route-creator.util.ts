@@ -16,17 +16,17 @@ import {
 } from '@turf/turf';
 import { MapPoint } from '../types/map.types';
 
-export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], distance: number): Feature<LineString> => {
+export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], captureWidth: number): Feature<LineString> => {
   const polyFeature = polygon([field]);
   const direction = getDirection(field, [field[0], field[1]]);
-  const firstLine = getParallelLine(line, distance, direction)
-  const lines: Feature<LineString>[] = [getFieldLine(firstLine, polyFeature, distance)];
+  const firstLine = getParallelLine(line, captureWidth, direction)
+  const lines: Feature<LineString>[] = [getFieldLine(firstLine, polyFeature, captureWidth)];
   let someLine = firstLine.geometry.coordinates
 
   while (true) {
-    const nextLine = getParallelLine(someLine, distance, direction)
+    const nextLine = getParallelLine(someLine, captureWidth, direction)
     if (booleanIntersects(polyFeature, nextLine)) {
-      const marginLine = getFieldLine(nextLine, polyFeature, distance);
+      const marginLine = getFieldLine(nextLine, polyFeature, captureWidth);
 
       lines.push(marginLine);
       someLine = nextLine.geometry.coordinates;
