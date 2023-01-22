@@ -1,9 +1,10 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
-import { LineString } from '@turf/turf';
+import { lineSliceAlong, lineString, LineString } from '@turf/turf';
 import * as turf from '@turf/turf';
 import { GeoJSONSource, Map as GLMap } from 'mapbox-gl';
 import { testField } from '../../constants/harvest-field';
 import { mapStyle } from '../../constants/map-config.constants';
+import { CombineProcessingService, CombineSensorsData } from '../../services/combine-processing.service';
 import { getFieldRoute } from '../../utils/route-creator.util';
 
 @Component({
@@ -20,13 +21,21 @@ export class MapComponent implements AfterViewInit {
 
   public map!: GLMap;
 
-  constructor() {
+  constructor(
+    private combineProcessingService: CombineProcessingService
+  ) {
   }
 
   ngAfterViewInit(): void {
     this.initMap();
 
-    console.log(turf.bearing([10, 10], [10, 20]))
+    const data: CombineSensorsData = {
+      velocity: 6.5,
+      bunkerFullness: 10,
+      harvest: 1.45,
+    }
+
+    console.log(this.combineProcessingService.calculateData(data))
   }
 
   private initMap(): void {
@@ -34,8 +43,8 @@ export class MapComponent implements AfterViewInit {
       container: 'map',
       style: mapStyle,
       center: [
-        128.03140640258792,
-        49.893768726936756,
+        128.200617,
+        50.092772,
       ],
       zoom: 14
     });
@@ -48,7 +57,7 @@ export class MapComponent implements AfterViewInit {
   private onMapLoad(): void {
     this.drawField();
     const route = this.drawRoute();
-    this.testAlong(route);
+    // this.testAlong(route);
   }
 
   private drawField(): void {
@@ -88,21 +97,73 @@ export class MapComponent implements AfterViewInit {
 
   private drawRoute(): turf.Feature<LineString> {
     const distance = 0.01; // 10m
-    const route = getFieldRoute(testField, [testField[0], testField[1]], distance)
+    const route = getFieldRoute(testField, [testField[3], testField[4]], distance)
 
-    this.map.addSource('scaled', {
+    const perimeter = lineString(testField);
+    const line1 = lineSliceAlong(route, 0, 20)
+    const line2 = lineSliceAlong(route, 20, 44)
+
+    this.map.addSource('perimeter', {
+      'type': 'geojson',
+      'data': perimeter
+    });
+
+    this.map.addLayer({
+      'id': 'perimeter',
+      'type': 'line',
+      'source': 'perimeter',
+      'layout': {},
+      'paint': {
+        'line-color': '#ff0',
+        'line-width': 3
+      }
+    });
+
+    this.map.addSource('scaled1', {
+      'type': 'geojson',
+      'data': line1
+    });
+
+    this.map.addLayer({
+      'id': 'sddsds1',
+      'type': 'line',
+      'source': 'scaled1',
+      'layout': {},
+      'paint': {
+        'line-color': '#96d711',
+        'line-width': 8
+      }
+    });
+
+    this.map.addSource('scaled2', {
+      'type': 'geojson',
+      'data': line2
+    });
+
+    this.map.addLayer({
+      'id': 'sddsds2',
+      'type': 'line',
+      'source': 'scaled2',
+      'layout': {},
+      'paint': {
+        'line-color': '#ee9824',
+        'line-width': 8
+      }
+    });
+
+    this.map.addSource('scaled3', {
       'type': 'geojson',
       'data': route
     });
 
     this.map.addLayer({
-      'id': 'sddsds',
+      'id': 'sddsds3',
       'type': 'line',
-      'source': 'scaled',
+      'source': 'scaled3',
       'layout': {},
       'paint': {
-        'line-color': '#0f0',
-        'line-width': 3
+        'line-color': 'rgba(36,184,238,0.3)',
+        'line-width': 8
       }
     });
 
