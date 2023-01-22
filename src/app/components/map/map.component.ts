@@ -1,11 +1,27 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
-import { length, lineSliceAlong, lineString, LineString } from '@turf/turf';
+import { length, lineSliceAlong, LineString } from '@turf/turf';
 import * as turf from '@turf/turf';
 import { GeoJSONSource, Map as GLMap } from 'mapbox-gl';
 import { testField } from '../../constants/harvest-field';
 import { mapStyle } from '../../constants/map-config.constants';
 import { CombineProcessingService, CombineSensorsData } from '../../services/combine-processing.service';
 import { HarvestFieldService } from '../../services/harvest-field.service';
+
+const mapLayers = {
+  FIELD: 'field',
+  FIELD_OUTLINE: 'fieldOutline',
+  COMPLETED: 'completed',
+  TILL_FILLING: 'tillFilling',
+  REMAINING: 'remaining',
+} as const;
+
+const mapLayerColors: Record<keyof typeof mapLayers, string> = {
+  FIELD: 'rgba(0,128,255,0.11)',
+  FIELD_OUTLINE: '#6faae5',
+  COMPLETED: 'rgba(159,215,17,0.55)',
+  TILL_FILLING: 'rgba(238,152,36,0.62)',
+  REMAINING: 'rgba(71,154,231,0.36)',
+}
 
 @Component({
   selector: 'app-map',
@@ -14,7 +30,6 @@ import { HarvestFieldService } from '../../services/harvest-field.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MapComponent implements AfterViewInit {
-  private readonly FIELD_SOURCE = 'field'
 
   /** ID контейнера карты */
   public id = 'map';
@@ -29,14 +44,6 @@ export class MapComponent implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initMap();
-
-    const data: CombineSensorsData = {
-      velocity: 6.5,
-      bunkerFullness: 10,
-      harvest: 1.45,
-    }
-
-    console.log(this.combineProcessingService.calculateData(data))
   }
 
   private initMap(): void {
@@ -51,178 +58,154 @@ export class MapComponent implements AfterViewInit {
     });
 
     this.map.on('load', () => {
-      this.onMapLoad();
+      this.createLayersAndSources();
+
+      this.harvestFieldService.startLine = [
+        this.harvestFieldService.field[4],
+        this.harvestFieldService.field[5],
+      ]
+      this.harvestFieldService.calculateFieldRoute();
+
+      this.updateFieldSource();
+
+      this.updateRoute({
+        distanceTraveled: 20,
+        velocity: 6.5,
+        bunkerFullness: 10,
+        harvest: 1.45,
+      });
     })
   }
 
-  private onMapLoad(): void {
-    this.drawField();
-    const route = this.drawRoute();
-    // this.testAlong(route);
+  private createLayersAndSources(): void {
+    this.createFieldLayer();
+    this.createCompletedRouteLayer();
+    this.createRouteTillFillingLayer();
+    this.createRemainingRouteLayer();
   }
 
-  private drawField(): void {
-    this.map.addSource(this.FIELD_SOURCE, {
+  /** Полигон обрабатываемого поля */
+  private createFieldLayer(): void {
+    this.map.addSource(mapLayers.FIELD, {
       'type': 'geojson',
       'data': {
         properties: null,
-        'type': 'Feature',
-        'geometry': {
-          'type': 'Polygon',
-          'coordinates': [testField]
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: []
         }
       }
     });
 
     this.map.addLayer({
-      'id': 'field-fill',
+      'id': mapLayers.FIELD,
       'type': 'fill',
-      'source': this.FIELD_SOURCE,
+      'source': mapLayers.FIELD,
       'layout': {},
       'paint': {
-        'fill-color': '#0080ff', // blue color fill
-        'fill-opacity': 0.2
+        'fill-color': mapLayerColors.FIELD,
       }
     });
+
     this.map.addLayer({
-      'id': 'field-outline',
+      'id': mapLayers.FIELD_OUTLINE,
       'type': 'line',
-      'source': this.FIELD_SOURCE,
+      'source': mapLayers.FIELD,
       'layout': {},
       'paint': {
-        'line-color': '#000',
+        'line-color': mapLayerColors.FIELD_OUTLINE,
         'line-width': 3
       }
     });
   }
 
-  private drawRoute(): turf.Feature<LineString> {
-    this.harvestFieldService.startLine = [
-      this.harvestFieldService.field[4],
-      this.harvestFieldService.field[5],
-    ]
-    const fieldRoute = this.harvestFieldService.calculateFieldRoute();
-    const calculatedData = this.combineProcessingService.calculateData({
-      velocity: 6.5,
-      bunkerFullness: 10,
-      harvest: 1.45,
+  private createCompletedRouteLayer(): void {
+    // Маршрут пройденного расстояния
+    this.map.addSource(mapLayers.COMPLETED, {
+      type: 'geojson',
+      data: {type: 'FeatureCollection', features: []}
     });
+
+    this.map.addLayer({
+      id: mapLayers.COMPLETED,
+      type: 'line',
+      source: mapLayers.COMPLETED,
+      layout: {},
+      paint: {
+        'line-color': mapLayerColors.COMPLETED,
+        'line-width': 8
+      }
+    });
+  }
+
+  // Маршрут пройденного расстояния
+  private createRouteTillFillingLayer(): void {
+    this.map.addSource(mapLayers.TILL_FILLING, {
+      type: 'geojson',
+      data: {type: 'FeatureCollection', features: []}
+    });
+
+    this.map.addLayer({
+      id: mapLayers.TILL_FILLING,
+      type: 'line',
+      source: mapLayers.TILL_FILLING,
+      layout: {},
+      paint: {
+        'line-color': mapLayerColors.TILL_FILLING,
+        'line-width': 8
+      }
+    });
+  }
+
+  private createRemainingRouteLayer(): void {
+    // Маршрут пройденного расстояния
+    this.map.addSource(mapLayers.REMAINING, {
+      type: 'geojson',
+      data: {type: 'FeatureCollection', features: []}
+    });
+
+    this.map.addLayer({
+      id: mapLayers.REMAINING,
+      type: 'line',
+      source: mapLayers.REMAINING,
+      layout: {},
+      paint: {
+        'line-color': mapLayerColors.REMAINING,
+        'line-width': 8
+      }
+    });
+  }
+
+  private updateFieldSource(): void {
+    (this.map.getSource(mapLayers.FIELD) as GeoJSONSource).setData({
+      properties: null,
+      type: 'Feature',
+      geometry: {
+        type: 'Polygon',
+        coordinates: [testField]
+      }
+    });
+  }
+
+  private updateRoute(data: CombineSensorsData): turf.Feature<LineString> {
+    const fieldRoute = this.harvestFieldService.getFieldRoute();
+    const calculatedData = this.combineProcessingService.calculateData(data);
 
     const overallDistance = length(fieldRoute);
 
-    const perimeter = lineString(testField);
-    const completed = lineSliceAlong(fieldRoute, 0, 20)
-    const tillFill = lineSliceAlong(fieldRoute, 20, 20 + calculatedData.performance)
-    const restDistance = lineSliceAlong(fieldRoute, 20 + calculatedData.performance, overallDistance);
+    const distanceCompleted = data.distanceTraveled ?? 0;
 
-    this.map.addSource('perimeter', {
-      'type': 'geojson',
-      'data': perimeter
-    });
+    if (distanceCompleted) {
+      const completed = lineSliceAlong(fieldRoute, 0, distanceCompleted);
+      (this.map.getSource(mapLayers.COMPLETED) as GeoJSONSource).setData(completed);
+    }
+    const routeTillFilling = lineSliceAlong(fieldRoute, distanceCompleted, distanceCompleted + calculatedData.performance)
+    const restDistance = lineSliceAlong(fieldRoute, distanceCompleted + calculatedData.performance, overallDistance);
 
-    this.map.addLayer({
-      'id': 'perimeter',
-      'type': 'line',
-      'source': 'perimeter',
-      'layout': {},
-      'paint': {
-        'line-color': '#ff0',
-        'line-width': 3
-      }
-    });
-
-    this.map.addSource('scaled1', {
-      'type': 'geojson',
-      'data': completed
-    });
-
-    this.map.addLayer({
-      'id': 'sddsds1',
-      'type': 'line',
-      'source': 'scaled1',
-      'layout': {},
-      'paint': {
-        'line-color': '#96d711',
-        'line-width': 8
-      }
-    });
-
-    this.map.addSource('scaled2', {
-      'type': 'geojson',
-      'data': tillFill
-    });
-
-    this.map.addLayer({
-      'id': 'sddsds2',
-      'type': 'line',
-      'source': 'scaled2',
-      'layout': {},
-      'paint': {
-        'line-color': '#ee9824',
-        'line-width': 8
-      }
-    });
-
-    this.map.addSource('scaled3', {
-      'type': 'geojson',
-      'data': restDistance
-    });
-
-    this.map.addLayer({
-      'id': 'sddsds3',
-      'type': 'line',
-      'source': 'scaled3',
-      'layout': {},
-      'paint': {
-        'line-color': 'rgba(36,184,238,0.3)',
-        'line-width': 8
-      }
-    });
+    (this.map.getSource(mapLayers.TILL_FILLING) as GeoJSONSource).setData(routeTillFilling);
+    (this.map.getSource(mapLayers.REMAINING) as GeoJSONSource).setData(restDistance);
 
     return fieldRoute;
-  }
-
-  private testAlong(lineString: turf.Feature<LineString>): void {
-    this.map.addSource('somePoint', {
-      'type': 'geojson',
-      'data': {
-        properties: null,
-        'type': 'Feature',
-        'geometry': {
-          'type': 'Point',
-          'coordinates': lineString.geometry.coordinates[0],
-        }
-      }
-    });
-    const source = this.map.getSource('somePoint') as GeoJSONSource
-
-
-    const fieldPerimeter = turf.length(lineString);
-
-    this.map.addLayer({
-      'id': 'population',
-      'type': 'circle',
-      'source': 'somePoint',
-      'paint': {
-      'circle-radius': 5,
-      'circle-color': 'blue'
-      }
-    });
-
-
-    const step = 0.005;
-    for (let i = 0; i < fieldPerimeter; i += step) {
-      const somePoint = turf.along(lineString, i);
-      source.setData(somePoint);
-    }
-    this.animate(lineString.geometry, source, fieldPerimeter, step)
-  }
-
-  private animate(lineString: turf.LineString, source: GeoJSONSource, perimeter: number, step: number, current = 0): void {
-    const somePoint = turf.along(lineString, current);
-    source.setData(somePoint);
-    if (step < perimeter) {
-      requestAnimationFrame(() => this.animate(lineString, source, perimeter, step, current + step));
-    }
   }
 }

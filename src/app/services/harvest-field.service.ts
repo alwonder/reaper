@@ -12,11 +12,18 @@ export class HarvestFieldService {
 
   public field: MapPoint[] = testField;
   public startLine: [MapPoint, MapPoint] | null = null;
-  public fieldRoute: Feature<LineString> | null = null;
+  private fieldRoute: Feature<LineString> | null = null;
 
   constructor(
     private combineProcessingService: CombineProcessingService
   ) { }
+
+  public getFieldRoute(): Feature<LineString> {
+    if (!this.fieldRoute) {
+      throw new Error('Маршрут движения по полю не просчитан');
+    }
+    return this.fieldRoute;
+  }
 
   public calculateFieldRoute(): Feature<LineString> {
     if (!this.startLine) {
