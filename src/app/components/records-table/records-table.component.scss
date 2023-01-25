@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  overflow: auto;
+}
+
+.records {
+
+}
+
+.records__record {
+  cursor: pointer;
+}
+
+.records__record_active {
+  background-color: aliceblue;
+}

@@ -1,4 +1,15 @@
+.app-container {
+  display: flex;
+  align-items: stretch;
+  height: 100vh;
+}
+
 .map-container {
-  width: 100vw;
+  width: 50%;
+  height: calc(100vh - 102px);
+}
+
+.panel-container {
+  width: 50%;
   height: calc(100vh - 102px);
 }

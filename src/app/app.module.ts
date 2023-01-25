@@ -6,12 +6,14 @@ import { AppComponent } from './app.component';
 import { AppService } from './app.service';
 import { MapComponent } from './components/map/map.component';
 import { BaseComponent } from './components/base.directive';
+import { RecordsTableComponent } from './components/records-table/records-table.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     BaseComponent,
     MapComponent,
+    RecordsTableComponent,
   ],
   imports: [
     BrowserModule

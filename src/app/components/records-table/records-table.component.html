@@ -1,0 +1,24 @@
+<table class="records">
+  <tr>
+    <th>Скорость</th>
+    <th>Урожайность</th>
+    <th>Заполненность</th>
+    <th>Расстояние</th>
+    <th>Производительность</th>
+    <th>Время заполнения</th>
+    <th>Расстояние до точки</th>
+  </tr>
+  <tr
+    *ngFor="let record of (records$ | async); index as i"
+    class="records__record"
+    [class.records__record_active]="record === activeRecord"
+    (click)="setActiveRecord(i)">
+    <td>{{record.velocity | number:'1.2'}}</td>
+    <td>{{record.harvest | number:'1.2'}}</td>
+    <td>{{record.bunkerFullness | number:'1.2'}}</td>
+    <td>{{record.distanceTraveled | number:'1.2'}}</td>
+    <td>{{record.performance | number:'1.2'}}</td>
+    <td>{{record.bunkerFillTime | number:'1.2'}}</td>
+    <td>{{record.bunkerFillDistance | number:'1.2'}}</td>
+  </tr>
+</table>
