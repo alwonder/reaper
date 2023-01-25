@@ -1,10 +1,12 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
-import { LineString } from '@turf/turf';
-import * as turf from '@turf/turf';
 import { Map as GLMap } from 'mapbox-gl';
+
 import { mapStyle } from '../../constants/map-config.constants';
-import { CombineProcessingService, CombineSensorsData } from '../../services/combine-processing.service';
+import { CombineProcessingService } from '../../services/combine-processing.service';
 import { HarvestFieldService } from '../../services/harvest-field.service';
+import { RecordsRepositoryService } from '../../services/records-repository.service';
+import { CombineProcessingOverallData } from '../../types/combine-processing.types';
+import { BaseComponent } from '../base.directive';
 import { MapRenderer } from './map.renderer';
 
 @Component({
@@ -13,7 +15,7 @@ import { MapRenderer } from './map.renderer';
   styleUrls: ['./map.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MapComponent implements AfterViewInit {
+export class MapComponent extends BaseComponent implements AfterViewInit {
 
   /** ID контейнера карты */
   public mapId = 'map';
@@ -24,7 +26,9 @@ export class MapComponent implements AfterViewInit {
   constructor(
     private combineProcessingService: CombineProcessingService,
     private harvestFieldService: HarvestFieldService,
+    private recordsRepositoryService: RecordsRepositoryService,
   ) {
+    super();
   }
 
   ngAfterViewInit(): void {
@@ -43,36 +47,38 @@ export class MapComponent implements AfterViewInit {
     });
 
     this.map.on('load', () => {
-      this.mapRenderer = new MapRenderer(this.map);
-      this.mapRenderer.prepareMap();
-      this.mapRenderer.updateField(this.harvestFieldService.field);
-
-      this.harvestFieldService.startLine = [
-        this.harvestFieldService.field[4],
-        this.harvestFieldService.field[5],
-      ]
-      this.harvestFieldService.calculateFieldRoute();
-
-      this.updateRoute({
-        distanceTraveled: 0,
-        velocity: 6.5,
-        bunkerFullness: 10,
-        harvest: 1.45,
-      });
+      this.onMapLoad();
     })
   }
 
-  private updateRoute(data: CombineSensorsData): turf.Feature<LineString> {
+  private onMapLoad(): void {
+    this.mapRenderer = new MapRenderer(this.map);
+    this.mapRenderer.updateField(this.harvestFieldService.field);
+
+    this.harvestFieldService.startLine = [
+      this.harvestFieldService.field[4],
+      this.harvestFieldService.field[5],
+    ]
+    this.harvestFieldService.calculateFieldRoute();
+
+    this.recordsRepositoryService.activeRecord$
+      .pipe(this.takeUntilDestroy())
+      .subscribe((record) => {
+        this.updateRoute(record);
+      });
+  }
+
+  private updateRoute(data: CombineProcessingOverallData | null): void {
     if (!this.mapRenderer) {
       throw new Error('Карта не готова');
     }
 
     const fieldRoute = this.harvestFieldService.getFieldRoute();
-    const calculatedData = this.combineProcessingService.calculateData(data);
+    if (!data) {
+      this.mapRenderer.updateRoute(fieldRoute, 0, 0);
+      return;
+    }
 
-    const distanceCompleted = data.distanceTraveled ?? 0;
-
-    this.mapRenderer.updateRoute(fieldRoute, distanceCompleted, calculatedData.bunkerFillDistance)
-    return fieldRoute;
+    this.mapRenderer.updateRoute(fieldRoute, data.distanceTraveled ?? 0, data.bunkerFillDistance)
   }
 }

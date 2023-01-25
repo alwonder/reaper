@@ -21,16 +21,18 @@ const mapLayerColors: Record<keyof typeof mapLayers, string> = {
 
 export class MapRenderer {
   constructor(private map: GLMap) {
+    this.prepareMap();
   }
 
   /** Подготовка слоёв карты, создание базовых слоёв */
-  public prepareMap(): void {
+  private prepareMap(): void {
     this.createFieldLayer();
     this.createCompletedRouteLayer();
     this.createRouteTillFillingLayer();
     this.createRemainingRouteLayer();
   }
 
+  /** Отрисовка обрабатываемой площади */
   public updateField(data: MapPoint[]): void {
     (this.map.getSource(mapLayers.FIELD) as GeoJSONSource).setData({
       properties: null,

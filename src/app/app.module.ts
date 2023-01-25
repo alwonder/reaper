@@ -5,11 +5,13 @@ import { APP_INITIALIZER } from '@angular/core';
 import { AppComponent } from './app.component';
 import { AppService } from './app.service';
 import { MapComponent } from './components/map/map.component';
+import { BaseComponent } from './components/base.directive';
 
 @NgModule({
   declarations: [
     AppComponent,
-    MapComponent
+    BaseComponent,
+    MapComponent,
   ],
   imports: [
     BrowserModule
