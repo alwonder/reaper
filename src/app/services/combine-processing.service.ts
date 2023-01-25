@@ -1,25 +1,42 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 import { CombineProcessingResult, CombineSensorsData } from '../types/combine-processing.types';
+
+/** Исходные данные */
+export interface CombinePredefinedData {
+  /** Конструктивная ширина захвата уборочной машины */
+  captureConstructionWidth: number;
+  /** Коэффициент использования конструктивной ширины захвата */
+  captureUsageCoefficient: number;
+  /** Объёмная масса, т/м^3 */
+  volumeMass: number;
+  /** Коэффициент использования объёма бункера */
+  bunkerUsageCoefficient: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class CombineProcessingService {
-  // Исходные данные
-  /** Конструктивная ширина захвата уборочной машины */
-  public captureConstructionWidth = 9.3
-  /** Коэффициент использования конструктивной ширины захвата */
-  public captureUsageCoefficient = 0.9;
-  /** Объёмная масса, т/м^3 */
-  public volumeMass = 0.75
-  /** Коэффициент использования объёма бункера */
-  public bunkerUsageCoefficient = 0.9
+  private predefinedDataSource = new BehaviorSubject<CombinePredefinedData>({
+    captureConstructionWidth: 9.3,
+    captureUsageCoefficient: 0.9,
+    volumeMass: 0.75,
+    bunkerUsageCoefficient: 0.9,
+  });
+
+  public predefinedData$ = this.predefinedDataSource.asObservable();
 
   constructor() { }
 
+  public getPredefinedData(): CombinePredefinedData {
+    return this.predefinedDataSource.value;
+  }
+
   /** Вычислить рабочую ширину захвата уборочной машины */
   public getCaptureWorkingWidth(): number {
-    return this.captureConstructionWidth * this.captureUsageCoefficient;
+    const data = this.getPredefinedData();
+    return data.captureConstructionWidth * data.captureUsageCoefficient;
   }
 
   /**
@@ -36,7 +53,8 @@ export class CombineProcessingService {
    * @param performance Производительность уборочной машины за один час рабочего времени
    */
   private getBunkerFillTime(data: CombineSensorsData, performance: number): number {
-    return (data.bunkerFullness * this.volumeMass * this.bunkerUsageCoefficient) / performance;
+    const predefinedData = this.getPredefinedData();
+    return (data.bunkerFullness * predefinedData.volumeMass * predefinedData.bunkerUsageCoefficient) / performance;
   }
 
   /**

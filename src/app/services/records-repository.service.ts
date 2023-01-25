@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { sensorsLogData } from '../mock/sensors-log.data';
 import { CombineProcessingOverallData, CombineSensorsData } from '../types/combine-processing.types';
 import { CombineProcessingService } from './combine-processing.service';
@@ -9,11 +10,18 @@ import { CombineProcessingService } from './combine-processing.service';
 })
 export class RecordsRepositoryService {
   private combineRecordsSource = new BehaviorSubject<CombineProcessingOverallData[]>([]);
-  private activeRecordSource = new BehaviorSubject<CombineProcessingOverallData | null>(null);
+  private activeRecordIndexSource = new BehaviorSubject<number | null>(null);
 
   public combineRecords$ = this.combineRecordsSource.asObservable();
 
-  public activeRecord$ = this.activeRecordSource.asObservable();
+  public activeRecord$ = combineLatest([
+    this.combineRecordsSource,
+    this.activeRecordIndexSource,
+  ])
+    .pipe(map(([records, index]) => {
+      if (index === null) return null;
+      return records[index] ?? null;
+    }));
 
   constructor(
     private combineProcessingService: CombineProcessingService
@@ -22,6 +30,11 @@ export class RecordsRepositoryService {
     sensorsLogData.forEach((data) => {
       this.addRecord(data);
     })
+
+    // Пересчитать вычисляемые значения при изменении исходных данных
+    this.combineProcessingService.predefinedData$.subscribe(() => {
+      this.recalculateData()
+    });
   }
 
   public addRecord(data: CombineSensorsData): void {
@@ -36,15 +49,19 @@ export class RecordsRepositoryService {
     return this.combineRecordsSource.value[index] ?? null;
   }
 
-  public setActiveRecord(record: CombineProcessingOverallData | null): void;
-  public setActiveRecord(index: number | null): void;
-  public setActiveRecord(record: number | CombineProcessingOverallData | null): void {
-    if (record === null) {
-      this.activeRecordSource.next(null);
-    } else if (typeof record === 'number') {
-      this.activeRecordSource.next(this.combineRecordsSource.value[record] ?? null);
-    } else {
-      this.activeRecordSource.next(record);
+  public setActiveRecord(index: number | null): void {
+    if (index === null) {
+      this.activeRecordIndexSource.next(null);
     }
+    this.activeRecordIndexSource.next(index);
+  }
+
+  private recalculateData(): void {
+    this.combineRecordsSource.next(
+      this.combineRecordsSource.value.map((record) => ({
+        ...record,
+        ...this.combineProcessingService.calculateData(record)
+      }))
+    )
   }
 }
