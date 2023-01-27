@@ -1,4 +1,8 @@
 import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatTabsModule } from '@angular/material/tabs';
 import { BrowserModule } from '@angular/platform-browser';
 import { APP_INITIALIZER } from '@angular/core';
 
@@ -7,16 +11,24 @@ import { AppService } from './app.service';
 import { MapComponent } from './components/map/map.component';
 import { BaseComponent } from './components/base.directive';
 import { RecordsTableComponent } from './components/records-table/records-table.component';
+import { CombineSetupComponent } from './components/combine-setup/combine-setup.component';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
     AppComponent,
     BaseComponent,
+    CombineSetupComponent,
     MapComponent,
     RecordsTableComponent,
   ],
   imports: [
-    BrowserModule
+    BrowserModule,
+    MatButtonModule,
+    MatInputModule,
+    MatTabsModule,
+    NoopAnimationsModule,
+    ReactiveFormsModule,
   ],
   providers: [
     AppService,

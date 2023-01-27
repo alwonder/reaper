@@ -1,11 +1,11 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
 import { Map as GLMap } from 'mapbox-gl';
+import { distinctUntilChanged } from 'rxjs/operators';
 
 import { mapStyle } from '../../constants/map-config.constants';
 import { CombineProcessingService } from '../../services/combine-processing.service';
 import { HarvestFieldService } from '../../services/harvest-field.service';
 import { RecordsRepositoryService } from '../../services/records-repository.service';
-import { CombineProcessingOverallData } from '../../types/combine-processing.types';
 import { BaseComponent } from '../base.directive';
 import { MapRenderer } from './map.renderer';
 
@@ -59,26 +59,34 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
       this.harvestFieldService.field[4],
       this.harvestFieldService.field[5],
     ]
-    this.harvestFieldService.calculateFieldRoute();
+
+    // Отслеживание изменения рабочей ширины захвата машины для переотрисовки маршрута
+    this.combineProcessingService.captureWorkingWidth$
+      .pipe(distinctUntilChanged(), this.takeUntilDestroy())
+      .subscribe(() => {
+        this.harvestFieldService.calculateFieldRoute();
+        this.updateActiveRoute()
+      })
 
     this.recordsRepositoryService.activeRecord$
       .pipe(this.takeUntilDestroy())
-      .subscribe((record) => {
-        this.updateRoute(record);
-      });
+      .subscribe(() => this.updateActiveRoute());
   }
 
-  private updateRoute(data: CombineProcessingOverallData | null): void {
+  /** Отрисовать маршрут с активной записью с сенсоров */
+  private updateActiveRoute(): void {
     if (!this.mapRenderer) {
       throw new Error('Карта не готова');
     }
 
+    const activeRecord = this.recordsRepositoryService.getActiveRecord()
     const fieldRoute = this.harvestFieldService.getFieldRoute();
-    if (!data) {
+
+    if (!activeRecord) {
       this.mapRenderer.updateRoute(fieldRoute, 0, 0);
       return;
     }
 
-    this.mapRenderer.updateRoute(fieldRoute, data.distanceTraveled ?? 0, data.bunkerFillDistance)
+    this.mapRenderer.updateRoute(fieldRoute, activeRecord.distanceTraveled ?? 0, activeRecord.bunkerFillDistance)
   }
 }

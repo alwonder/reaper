@@ -1,0 +1,46 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Конструктивная ширина захвата уборочной машины</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="captureConstructionWidth">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Коэффициент использования конструктивной ширины захвата</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="captureUsageCoefficient">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Объёмная масса, т/м^3</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="volumeMass">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Коэффициент использования объёма бункера</mat-label>
+      <input
+        matInput
+        type="number"
+        formControlName="bunkerUsageCoefficient">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <button mat-button type="submit" [disabled]="form.pristine">Применить</button>
+    <button mat-button [disabled]="form.pristine" (click)="reset()">Сброс</button>
+  </p>
+</form>

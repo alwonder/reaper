@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { CombineProcessingResult, CombineSensorsData } from '../types/combine-processing.types';
 
 /** Исходные данные */
@@ -26,11 +27,19 @@ export class CombineProcessingService {
   });
 
   public predefinedData$ = this.predefinedDataSource.asObservable();
+  /** Рабочая ширина уборочной машины */
+  public captureWorkingWidth$ = this.predefinedData$.pipe(
+    map((data) => data.captureConstructionWidth * data.captureUsageCoefficient)
+  )
 
   constructor() { }
 
   public getPredefinedData(): CombinePredefinedData {
     return this.predefinedDataSource.value;
+  }
+
+  public setPredefinedData(data: CombinePredefinedData): void {
+    this.predefinedDataSource.next(data);
   }
 
   /** Вычислить рабочую ширину захвата уборочной машины */

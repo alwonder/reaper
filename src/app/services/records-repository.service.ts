@@ -49,6 +49,13 @@ export class RecordsRepositoryService {
     return this.combineRecordsSource.value[index] ?? null;
   }
 
+  public getActiveRecord(): CombineProcessingOverallData | null {
+    const activeIndex = this.activeRecordIndexSource.value;
+    if (activeIndex === null) return null;
+
+    return this.combineRecordsSource.value[activeIndex] ?? null
+  }
+
   public setActiveRecord(index: number | null): void {
     if (index === null) {
       this.activeRecordIndexSource.next(null);
