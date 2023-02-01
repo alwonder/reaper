@@ -2,6 +2,7 @@ import booleanIntersects from '@turf/boolean-intersects';
 import {
   along,
   bearing,
+  bezierSpline,
   destination,
   Feature,
   featureCollection,
@@ -18,32 +19,41 @@ import { MapPoint } from '../types/map.types';
 
 export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], captureWidth: number): Feature<LineString> => {
   const polyFeature = polygon([field]);
+
+  // Направление, в котором будет отрисовываться траектория
   const direction = getDirection(field, [field[0], field[1]]);
+  // Первая полоса в траектории
   const firstLine = getParallelLine(line, captureWidth, direction)
-  const lines: Feature<LineString>[] = [getFieldLine(firstLine, polyFeature, captureWidth)];
-  let someLine = firstLine.geometry.coordinates
+  // Направление первой полосы, для выравнивания направления всех остальных полос под неё
+  const baseBearing = bearing(firstLine.geometry.coordinates[0], firstLine.geometry.coordinates[1]);
+  // Массив полос для построения траектории в дальнейшем
+  const lines: Feature<LineString>[] = [firstLine];
+
+  let currentLine = firstLine.geometry.coordinates
 
   while (true) {
-    const nextLine = getParallelLine(someLine, captureWidth, direction)
-    if (booleanIntersects(polyFeature, nextLine)) {
-      const marginLine = getFieldLine(nextLine, polyFeature, captureWidth);
+    const nextLine = getParallelLine(currentLine, captureWidth, direction)
+    const scaledLine = transformScale(nextLine, 5);
+    if (booleanIntersects(polyFeature, scaledLine)) {
+      const marginLine = normalizeLine(getFieldLine(nextLine, polyFeature, captureWidth), baseBearing);
 
       lines.push(marginLine);
-      someLine = nextLine.geometry.coordinates;
-
+      currentLine = nextLine.geometry.coordinates;
     } else {
       break;
     }
   }
 
   const path = connectLines(featureCollection(lines));
-  return path;
-  // return bezierSpline(path, {
-  //   resolution: 400000,
-  //   sharpness: 0.01
-  // })
+
+  // return path;
+  return bezierSpline(path, {
+    resolution: 400000,
+    sharpness: 0.03
+  })
 }
 
+/** Получить направление распространения полос траектории */
 export const getDirection = (field: MapPoint[], line: [MapPoint, MapPoint]): 'left' | 'right' => {
   const polyFeature = polygon([field]);
   const rightLine = getParallelLine(line, 0.01, 'right');
@@ -67,18 +77,31 @@ export const getParallelLine = (line: Position[], distance: number, pos: 'left' 
  * @param distance
  */
 function getFieldLine(nextLine: Feature<LineString>, polyFeature: Feature<Polygon>, distance: number): Feature<LineString> {
-  const scaledLine = transformScale(nextLine, 10);
+  const scaledLine = transformScale(nextLine, 5);
   const intersect = lineIntersect(scaledLine, polyFeature);
   const edgeLine = lineString([intersect.features[0]!.geometry.coordinates, intersect.features[1]!.geometry.coordinates])
   return getMarginLine(edgeLine, distance);
 }
 
-export const getMarginLine = (line: Feature<LineString>, distance: number): Feature<LineString> => {
-  const point1 = along(line, distance);
-  const point2 = along(lineString([line.geometry.coordinates[1], line.geometry.coordinates[0]]), distance);
+/** Получить полосу с учётом ширины захвата уборочного комбайна */
+export const getMarginLine = (line: Feature<LineString>, captureWidth: number): Feature<LineString> => {
+  const point1 = along(line, captureWidth);
+  const point2 = along(lineString([line.geometry.coordinates[1], line.geometry.coordinates[0]]), captureWidth);
   return lineString([point1.geometry.coordinates, point2.geometry.coordinates]);
 }
 
+/** Выровнять направление линии по первой линии в коллекции */
+export const normalizeLine = (feature: Feature<LineString>, baseBearing: number): Feature<LineString> => {
+  const [p0, p1] = feature.geometry.coordinates
+  const featureBearing = bearing(p0, p1);
+  if (Math.floor(baseBearing) === Math.floor(featureBearing)) {
+    return lineString([p0, p1])
+  } else {
+    return lineString([p1, p0])
+  }
+}
+
+/** Соединить все линии в зигзагообразную траекторию по всей площади поля */
 export const connectLines = (lines: FeatureCollection<LineString>): Feature<LineString> => {
   const points: Position[] = [];
   lines.features.forEach((feature, index) => {
