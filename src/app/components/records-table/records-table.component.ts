@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { RecordsRepositoryService } from '../../services/records-repository.service';
-import { CombineProcessingOverallData } from '../../types/combine-processing.types';
+import { CombineProcessingOverallData, CombineSensorsData } from '../../types/combine-processing.types';
 import { BaseComponent } from '../base.directive';
+import { AddRecordDialogComponent } from './add-record/add-record-dialog.component';
 
 @Component({
   selector: 'app-records-table',
@@ -16,6 +18,7 @@ export class RecordsTableComponent extends BaseComponent implements OnInit {
 
   constructor(
     private changeDetectorRef: ChangeDetectorRef,
+    public dialog: MatDialog,
     private recordsRepositoryService: RecordsRepositoryService
   ) {
     super();
@@ -33,5 +36,16 @@ export class RecordsTableComponent extends BaseComponent implements OnInit {
 
   public setActiveRecord(index: number | null): void {
     this.recordsRepositoryService.setActiveRecord(index);
+  }
+
+  public addRecord(): void {
+    this.dialog.open(AddRecordDialogComponent)
+      .afterClosed()
+      .pipe(this.takeUntilDestroy())
+      .subscribe((data?: CombineSensorsData) => {
+        if (!data) return;
+
+        this.recordsRepositoryService.addRecord(data);
+      })
   }
 }

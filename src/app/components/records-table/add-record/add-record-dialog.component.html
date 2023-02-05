@@ -1,0 +1,51 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Добавить данные с сенсоров</h2>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Урожайность, Га</mat-label>
+      <input
+        matInput
+        type="number"
+        [required]="true"
+        formControlName="harvest">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Заполненность бункера, м^3</mat-label>
+      <input
+        matInput
+        type="number"
+        [required]="true"
+        formControlName="bunkerFullness">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Рабочая скорость, км/ч</mat-label>
+      <input
+        matInput
+        type="number"
+        [required]="true"
+        formControlName="velocity">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Пройденное расстояние, км</mat-label>
+      <input
+        matInput
+        type="number"
+        [required]="true"
+        formControlName="distanceTraveled">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <button mat-button type="submit" [disabled]="form.pristine">Добавить</button>
+  </p>
+</form>
