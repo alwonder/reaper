@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Feature, LineString } from '@turf/turf';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { testField } from '../constants/harvest-field';
 import { MapPoint } from '../types/map.types';
 import { getFieldRoute } from '../utils/route-creator.util';
@@ -9,6 +10,9 @@ import { CombineProcessingService } from './combine-processing.service';
   providedIn: 'root'
 })
 export class HarvestFieldService {
+  public drawMode$ = new BehaviorSubject<boolean>(false);
+  public drawModeApply$ = new Subject();
+  public drawModeCancel$ = new Subject();
 
   public field: MapPoint[] = testField;
   public startLine: [MapPoint, MapPoint] | null = null;

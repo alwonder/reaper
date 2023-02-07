@@ -1,0 +1,8 @@
+<ng-container *ngIf="drawMode$ | async; else viewMode">
+  <button mat-button (click)="cancelDrawnField()">Отмена</button>
+  <button mat-button (click)="applyDrawnField()">Применить</button>
+</ng-container>
+
+<ng-template #viewMode>
+  <button mat-button (click)="enableDrawMode()">Изменить поле</button>
+</ng-template>

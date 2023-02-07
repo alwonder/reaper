@@ -15,6 +15,7 @@ import { RecordsTableComponent } from './components/records-table/records-table.
 import { CombineSetupComponent } from './components/combine-setup/combine-setup.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AddRecordDialogComponent } from './components/records-table/add-record/add-record-dialog.component';
+import { FieldSetupComponent } from './components/field-setup/field-setup.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import { AddRecordDialogComponent } from './components/records-table/add-record/
     AppComponent,
     BaseComponent,
     CombineSetupComponent,
+    FieldSetupComponent,
     MapComponent,
     RecordsTableComponent,
   ],
