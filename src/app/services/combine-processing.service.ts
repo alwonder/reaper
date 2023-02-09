@@ -13,6 +13,8 @@ export interface CombinePredefinedData {
   volumeMass: number;
   /** Коэффициент использования объёма бункера */
   bunkerUsageCoefficient: number;
+  /** Конструктивный объём бункера */
+  bunkerVolume: number;
 }
 
 @Injectable({
@@ -24,6 +26,7 @@ export class CombineProcessingService {
     captureUsageCoefficient: 0.9,
     volumeMass: 0.75,
     bunkerUsageCoefficient: 0.9,
+    bunkerVolume: 10,
   });
 
   public predefinedData$ = this.predefinedDataSource.asObservable();
@@ -58,12 +61,12 @@ export class CombineProcessingService {
 
   /**
    * Вычислить время заполнения бункера комбайна
-   * @param data Данные с датчиков уборочной машины
    * @param performance Производительность уборочной машины за один час рабочего времени
+   * @param bunkerDelta Дельта бункера
    */
-  private getBunkerFillTime(data: CombineSensorsData, performance: number): number {
-    const predefinedData = this.getPredefinedData();
-    return (data.bunkerFullness * predefinedData.volumeMass * predefinedData.bunkerUsageCoefficient) / performance;
+  private getBunkerFillTime(performance: number, bunkerDelta: number): number {
+    const predefined = this.getPredefinedData();
+    return (bunkerDelta * predefined.volumeMass * predefined.bunkerUsageCoefficient) / performance;
   }
 
   /**
@@ -72,17 +75,20 @@ export class CombineProcessingService {
    * @param bunkerFillTime Время заполнения бункера комбайна, час (4)
    */
   private getBunkerFillDistance(data: CombineSensorsData, bunkerFillTime: number): number {
-    return data.velocity / bunkerFillTime;
+    return data.velocity * bunkerFillTime;
   }
 
   public calculateData(data: CombineSensorsData): CombineProcessingResult {
+    const predefined = this.getPredefinedData();
     const performance = this.getMachinePerformance(data);
-    const bunkerFillTime = this.getBunkerFillTime(data, performance)
+    const bunkerDelta = predefined.bunkerVolume - data.bunkerVolFullness;
+    const bunkerFillTime = this.getBunkerFillTime(performance, bunkerDelta);
     const bunkerFillDistance = this.getBunkerFillDistance(data, bunkerFillTime)
 
     return {
       performance,
       bunkerFillTime,
+      bunkerDelta,
       bunkerFillDistance,
     };
   }

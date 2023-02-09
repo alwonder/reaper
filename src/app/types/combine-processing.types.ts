@@ -14,6 +14,7 @@ export interface CombineSensorsData {
 export interface CombineProcessingResult {
   /** Производительность уборочной машины за один час основного времени, т/ч */
   performance: number;
+  bunkerDelta: number;
   /** Время заполнения бункера комбайна, ч */
   bunkerFillTime: number;
   /** Расстояние до расчетной точки, км */
