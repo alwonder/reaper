@@ -1,12 +1,14 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
+import { Feature, LineString } from '@turf/turf';
 import { Map as GLMap } from 'mapbox-gl';
-import { fromEvent, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, takeUntil } from 'rxjs/operators';
+import { combineLatest, fromEvent, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 
 import { mapStyle } from '../../constants/map-config.constants';
 import { CombineProcessingService } from '../../services/combine-processing.service';
 import { HarvestFieldService } from '../../services/harvest-field.service';
 import { RecordsRepositoryService } from '../../services/records-repository.service';
+import { CombineProcessingOverallData } from '../../types/combine-processing.types';
 import { MapPoint } from '../../types/map.types';
 import { BaseComponent } from '../base.directive';
 import { MapRenderer } from './map.renderer';
@@ -55,44 +57,37 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
 
   private onMapLoad(): void {
     this.mapRenderer = new MapRenderer(this.map);
-    this.mapRenderer.updateField(this.harvestFieldService.field$.value);
 
     this.harvestFieldService.drawMode$.pipe(
       filter((enabled) => enabled),
       this.takeUntilDestroy(),
     )
-      .subscribe(() => {
-        this.enableDrawMode();
-      })
+      .subscribe(() => this.enableDrawMode())
 
-    // Отслеживание изменения рабочей ширины захвата машины для переотрисовки маршрута
-    this.combineProcessingService.captureWorkingWidth$
-      .pipe(distinctUntilChanged(), this.takeUntilDestroy())
-      .subscribe(() => {
-        this.harvestFieldService.calculateFieldRoute();
-        this.updateActiveRoute()
-      })
-
-    this.recordsRepositoryService.activeRecord$
+    this.harvestFieldService.field$
       .pipe(this.takeUntilDestroy())
-      .subscribe(() => this.updateActiveRoute());
+      .subscribe((field) => this.mapRenderer?.updateField(field))
+
+    combineLatest([
+      this.harvestFieldService.fieldRoute$,
+      this.recordsRepositoryService.activeRecord$,
+    ])
+      .pipe(this.takeUntilDestroy())
+      .subscribe(([route, record]) => this.updateActiveRoute(route, record))
   }
 
   /** Отрисовать маршрут с активной записью с сенсоров */
-  private updateActiveRoute(): void {
+  private updateActiveRoute(route: Feature<LineString>, record: CombineProcessingOverallData | null): void {
     if (!this.mapRenderer) {
       throw new Error('Карта не готова');
     }
 
-    const activeRecord = this.recordsRepositoryService.getActiveRecord()
-    const fieldRoute = this.harvestFieldService.getFieldRoute();
-
-    if (!activeRecord) {
-      this.mapRenderer.updateRoute(fieldRoute, 0, 0);
+    if (!record) {
+      this.mapRenderer.updateRoute(route, 0, 0);
       return;
     }
 
-    this.mapRenderer.updateRoute(fieldRoute, activeRecord.distanceTraveled ?? 0, activeRecord.bunkerFillDistance)
+    this.mapRenderer.updateRoute(route, record.distanceTraveled ?? 0, record.bunkerFillDistance)
   }
 
   public enableDrawMode(): void {
@@ -148,10 +143,6 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
         this.mapRenderer?.updateFieldDraw([]);
         drawnField.push(drawnField[0]);
         this.harvestFieldService.applyField(drawnField);
-
-        this.harvestFieldService.calculateFieldRoute();
-        this.mapRenderer?.updateField(this.harvestFieldService.field$.value)
-        this.updateActiveRoute();
 
         unsubscriber.next();
         unsubscriber.complete();

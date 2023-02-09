@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Feature, LineString } from '@turf/turf';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable, Subject } from 'rxjs';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 import { testField } from '../constants/harvest-field';
 import { MapPoint } from '../types/map.types';
 import { getFieldRoute } from '../utils/route-creator.util';
@@ -18,7 +19,19 @@ export class HarvestFieldService {
   public activeCorner$ = new BehaviorSubject<number>(0);
   public routeDirection$ = new BehaviorSubject<boolean>(true);
 
-  private fieldRoute: Feature<LineString> | null = null;
+  public fieldRoute$: Observable<Feature<LineString>> = combineLatest([
+    this.field$.pipe(distinctUntilChanged()),
+    this.combineProcessingService.captureWorkingWidth$.pipe(distinctUntilChanged()),
+    this.activeCorner$.pipe(distinctUntilChanged()),
+    this.routeDirection$.pipe(distinctUntilChanged()),
+  ])
+    .pipe(map(([field, captureWidth]) => {
+      return getFieldRoute(
+        field,
+        this.getStartLine(),
+        captureWidth * 0.001
+      );
+    }))
 
   constructor(
     private combineProcessingService: CombineProcessingService
@@ -27,21 +40,6 @@ export class HarvestFieldService {
   public applyField(field: MapPoint[]): void {
     this.activeCorner$.next(0);
     this.field$.next(field);
-  }
-
-  public getFieldRoute(): Feature<LineString> {
-    if (!this.fieldRoute) {
-      throw new Error('Маршрут движения по полю не просчитан');
-    }
-    return this.fieldRoute;
-  }
-
-  public calculateFieldRoute(): void {
-    this.fieldRoute = getFieldRoute(
-      this.field$.value,
-      this.getStartLine(),
-      this.combineProcessingService.getCaptureWorkingWidth() * 0.001
-    );
   }
 
   private getStartLine(): [MapPoint, MapPoint] {
