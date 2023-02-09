@@ -38,6 +38,7 @@ export class HarvestFieldService {
   ) { }
 
   public applyField(field: MapPoint[]): void {
+    console.log('New field', field);
     this.activeCorner$.next(0);
     this.field$.next(field);
   }
