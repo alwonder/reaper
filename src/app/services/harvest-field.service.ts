@@ -16,7 +16,7 @@ export class HarvestFieldService {
 
   public field$ = new BehaviorSubject<MapPoint[]>(testField);
   public activeCorner$ = new BehaviorSubject<number>(0);
-  public cornerClockwise$ = new BehaviorSubject<boolean>(true);
+  public routeDirection$ = new BehaviorSubject<boolean>(true);
 
   private fieldRoute: Feature<LineString> | null = null;
 
@@ -47,9 +47,9 @@ export class HarvestFieldService {
   private getStartLine(): [MapPoint, MapPoint] {
     const field = this.field$.value;
     const activeCorner = this.activeCorner$.value;
-    const cornerClockwise = this.cornerClockwise$.value;
+    const routeDirection = this.routeDirection$.value;
 
-    let secondPoint = cornerClockwise ? activeCorner + 1 : activeCorner - 1;
+    let secondPoint = routeDirection ? activeCorner + 1 : activeCorner - 1;
     if (secondPoint > field.length - 1) {
       secondPoint = 0;
     } else if (secondPoint < 0) {

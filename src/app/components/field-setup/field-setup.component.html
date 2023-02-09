@@ -1,8 +1,26 @@
 <ng-container *ngIf="drawMode$ | async; else viewMode">
   <button mat-button (click)="cancelDrawnField()">Отмена</button>
-  <button mat-button (click)="applyDrawnField()">Применить</button>
+  <button mat-raised-button (click)="applyDrawnField()">Применить</button>
 </ng-container>
 
 <ng-template #viewMode>
   <button mat-button (click)="enableDrawMode()">Изменить поле</button>
 </ng-template>
+
+<div class="corner-select">
+  <button
+    *ngFor="let _ of corners$ | async; index as i"
+    mat-button
+    class="corner-select__button"
+    [color]="(activeCorner$ | async) === i ? 'accent' : 'primary'"
+    [class.corner-select__button_active]="(activeCorner$ | async) === i"
+    (click)="setActiveCorner(i)">
+    {{i}}
+  </button>
+</div>
+
+<button
+  mat-raised-button
+  (click)="changeRouteDirection()">
+  Сменить направление
+</button>

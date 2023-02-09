@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HarvestFieldService } from '../../services/harvest-field.service';
 
 @Component({
@@ -8,6 +10,10 @@ import { HarvestFieldService } from '../../services/harvest-field.service';
 })
 export class FieldSetupComponent implements OnInit {
   public drawMode$ = this.harvestFieldService.drawMode$;
+  public activeCorner$ = this.harvestFieldService.activeCorner$;
+  public corners$: Observable<number[]> = this.harvestFieldService.field$
+    .pipe(map((field) => Array(field.length - 1)))
+
   constructor(
     private harvestFieldService: HarvestFieldService,
   ) { }
@@ -27,5 +33,18 @@ export class FieldSetupComponent implements OnInit {
   public cancelDrawnField(): void {
     this.harvestFieldService.drawModeCancel$.next();
     this.harvestFieldService.drawMode$.next(false);
+  }
+
+  public onActiveCornerChange($event: Event): void {
+    // @ts-expect-error
+    this.activeCorner$.next(parseInt($event.target.value));
+  }
+
+  public setActiveCorner(index: number): void {
+    this.harvestFieldService.activeCorner$.next(index);
+  }
+
+  public changeRouteDirection(): void {
+    this.harvestFieldService.routeDirection$.next(!this.harvestFieldService.routeDirection$.value);
   }
 }
