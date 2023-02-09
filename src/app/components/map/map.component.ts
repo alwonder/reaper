@@ -55,14 +55,7 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
 
   private onMapLoad(): void {
     this.mapRenderer = new MapRenderer(this.map);
-    this.mapRenderer.updateField(this.harvestFieldService.field);
-    // TODO del
-    this.mapRenderer.updateFieldDraw(this.harvestFieldService.field);
-
-    this.harvestFieldService.startLine = [
-      this.harvestFieldService.field[4],
-      this.harvestFieldService.field[5],
-    ]
+    this.mapRenderer.updateField(this.harvestFieldService.field$.value);
 
     this.harvestFieldService.drawMode$.pipe(
       filter((enabled) => enabled),
@@ -154,15 +147,10 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
         this.mapRenderer?.setDrawMode(false);
         this.mapRenderer?.updateFieldDraw([]);
         drawnField.push(drawnField[0]);
-        this.harvestFieldService.field = drawnField;
-
-        this.harvestFieldService.startLine = [
-          drawnField[0],
-          drawnField[1],
-        ]
+        this.harvestFieldService.applyField(drawnField);
 
         this.harvestFieldService.calculateFieldRoute();
-        this.mapRenderer?.updateField(this.harvestFieldService.field)
+        this.mapRenderer?.updateField(this.harvestFieldService.field$.value)
         this.updateActiveRoute();
 
         unsubscriber.next();

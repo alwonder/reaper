@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -35,6 +36,7 @@ import { FieldSetupComponent } from './components/field-setup/field-setup.compon
     MatTabsModule,
     NoopAnimationsModule,
     ReactiveFormsModule,
+    MatCheckboxModule,
   ],
   providers: [
     AppService,

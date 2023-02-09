@@ -3,6 +3,8 @@ export interface CombineSensorsData {
   harvest: number;
   /** Заполненность бункера, м^3 */
   bunkerFullness: number;
+  /** TODO что-то новое для дельты */
+  bunkerVolFullness: number;
   /** Рабочая скорость, км/ч */
   velocity: number;
   /** Пройденное расстояние, км */

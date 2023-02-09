@@ -14,13 +14,20 @@ export class HarvestFieldService {
   public drawModeApply$ = new Subject();
   public drawModeCancel$ = new Subject();
 
-  public field: MapPoint[] = testField;
-  public startLine: [MapPoint, MapPoint] | null = null;
+  public field$ = new BehaviorSubject<MapPoint[]>(testField);
+  public activeCorner$ = new BehaviorSubject<number>(0);
+  public cornerClockwise$ = new BehaviorSubject<boolean>(true);
+
   private fieldRoute: Feature<LineString> | null = null;
 
   constructor(
     private combineProcessingService: CombineProcessingService
   ) { }
+
+  public applyField(field: MapPoint[]): void {
+    this.activeCorner$.next(0);
+    this.field$.next(field);
+  }
 
   public getFieldRoute(): Feature<LineString> {
     if (!this.fieldRoute) {
@@ -29,16 +36,26 @@ export class HarvestFieldService {
     return this.fieldRoute;
   }
 
-  public calculateFieldRoute(): Feature<LineString> {
-    if (!this.startLine) {
-      throw new Error('Не заданы начальные данные');
-    }
-
+  public calculateFieldRoute(): void {
     this.fieldRoute = getFieldRoute(
-      this.field,
-      this.startLine,
+      this.field$.value,
+      this.getStartLine(),
       this.combineProcessingService.getCaptureWorkingWidth() * 0.001
     );
-    return this.fieldRoute
+  }
+
+  private getStartLine(): [MapPoint, MapPoint] {
+    const field = this.field$.value;
+    const activeCorner = this.activeCorner$.value;
+    const cornerClockwise = this.cornerClockwise$.value;
+
+    let secondPoint = cornerClockwise ? activeCorner + 1 : activeCorner - 1;
+    if (secondPoint > field.length - 1) {
+      secondPoint = 0;
+    } else if (secondPoint < 0) {
+      secondPoint = field.length - 1;
+    }
+
+    return [field[activeCorner], field[secondPoint]];
   }
 }
