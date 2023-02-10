@@ -1,3 +1,17 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.change-field {
+  display: flex;
+  gap: 24px;
+  padding: 32px;
+}
+
 .corner-select {
 
 }

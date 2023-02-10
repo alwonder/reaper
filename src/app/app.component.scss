@@ -1,15 +1,36 @@
+$header-height: 48px;
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: $header-height;
+
+  h1 {
+    margin-block: 0;
+  }
+}
+
 .app-container {
   display: flex;
   align-items: stretch;
-  height: 100vh;
+  height: calc(100vh -  #{$header-height});
 }
 
 .map-container {
   width: 50%;
-  height: calc(100vh - 102px);
+  height: calc(100vh -  #{$header-height});
 }
 
 .panel-container {
   width: 50%;
-  height: calc(100vh - 102px);
+  height: calc(100vh -  #{$header-height});
+
+  .mat-tab-group {
+    height: 100%;
+
+    ::ng-deep .mat-tab-body-wrapper {
+      flex: 1;
+    }
+  }
 }

@@ -1,12 +1,4 @@
-<ng-container *ngIf="drawMode$ | async; else viewMode">
-  <button mat-button (click)="cancelDrawnField()">Отмена</button>
-  <button mat-raised-button (click)="applyDrawnField()">Применить</button>
-</ng-container>
-
-<ng-template #viewMode>
-  <button mat-button (click)="enableDrawMode()">Изменить поле</button>
-</ng-template>
-
+<h3>Активный угол</h3>
 <div class="corner-select">
   <button
     *ngFor="let _ of corners$ | async; index as i"
@@ -19,8 +11,20 @@
   </button>
 </div>
 
-<button
-  mat-raised-button
-  (click)="changeRouteDirection()">
-  Сменить направление
-</button>
+<div class="change-field">
+  <ng-container *ngIf="drawMode$ | async; else viewMode">
+    <button mat-button (click)="cancelDrawnField()">Отмена</button>
+    <button mat-raised-button (click)="applyDrawnField()">Применить</button>
+  </ng-container>
+
+  <ng-template #viewMode>
+    <button mat-button (click)="enableDrawMode()">Изменить поле</button>
+  </ng-template>
+</div>
+
+
+<!--<button-->
+<!--  mat-raised-button-->
+<!--  (click)="changeRouteDirection()">-->
+<!--  Сменить направление-->
+<!--</button>-->
