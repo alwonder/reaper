@@ -9,6 +9,7 @@ import { CombineProcessingService } from './combine-processing.service';
   providedIn: 'root'
 })
 export class RecordsRepositoryService {
+  private sensorsRecordsSource = new BehaviorSubject<CombineSensorsData[]>([]);
   private combineRecordsSource = new BehaviorSubject<CombineProcessingOverallData[]>([]);
   private activeRecordIndexSource = new BehaviorSubject<number | null>(null);
 
@@ -38,11 +39,17 @@ export class RecordsRepositoryService {
   }
 
   public addRecord(data: CombineSensorsData): void {
-    const calculatedData = this.combineProcessingService.calculateData(data);
-    this.combineRecordsSource.next([
-      ...this.combineRecordsSource.value,
-      { ...data, ...calculatedData }
+    this.sensorsRecordsSource.next([
+      ...this.sensorsRecordsSource.value,
+      data,
     ]);
+
+    const combineRecords = this.combineRecordsSource.value;
+
+    this.combineRecordsSource.next([
+      ...combineRecords,
+      this.combineProcessingService.getOverallRecord(data, combineRecords[combineRecords.length - 1])
+    ])
   }
 
   public getRecord(index: number): CombineProcessingOverallData | null {
@@ -64,11 +71,13 @@ export class RecordsRepositoryService {
   }
 
   private recalculateData(): void {
-    this.combineRecordsSource.next(
-      this.combineRecordsSource.value.map((record) => ({
-        ...record,
-        ...this.combineProcessingService.calculateData(record)
-      }))
-    )
+    const sensorRecords = this.sensorsRecordsSource.value;
+    const newData: CombineProcessingOverallData[] = [];
+
+    for (let i = 0; i < sensorRecords.length; i += 1) {
+      const previousData = newData[i - 1];
+      newData.push(this.combineProcessingService.getOverallRecord(sensorRecords[i], previousData))
+    }
+    this.combineRecordsSource.next(newData);
   }
 }

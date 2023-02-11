@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CombineProcessingResult, CombineSensorsData } from '../types/combine-processing.types';
+import {
+  CombineProcessingOverallData,
+  CombineSensorsData
+} from '../types/combine-processing.types';
 
 /** Исходные данные */
 export interface CombinePredefinedData {
@@ -78,17 +81,22 @@ export class CombineProcessingService {
     return data.velocity * bunkerFillTime;
   }
 
-  public calculateData(data: CombineSensorsData): CombineProcessingResult {
+  public getOverallRecord(data: CombineSensorsData, previousRecord?: CombineProcessingOverallData): CombineProcessingOverallData {
     const predefined = this.getPredefinedData();
     const performance = this.getMachinePerformance(data);
-    const bunkerDelta = predefined.bunkerVolume - data.bunkerVolFullness;
+    const bunkerVolFullness = (previousRecord?.bunkerVolFullness ?? 0) + data.bunkerFullness;
+    const bunkerDelta = predefined.bunkerVolume - bunkerVolFullness;
     const bunkerFillTime = this.getBunkerFillTime(performance, bunkerDelta);
     const bunkerFillDistance = this.getBunkerFillDistance(data, bunkerFillTime)
+    const distanceTraveled = data.velocity / 60 + (previousRecord?.distanceTraveled ?? 0);
 
     return {
+      ...data,
+      distanceTraveled,
       performance,
       bunkerFillTime,
       bunkerDelta,
+      bunkerVolFullness,
       bunkerFillDistance,
     };
   }

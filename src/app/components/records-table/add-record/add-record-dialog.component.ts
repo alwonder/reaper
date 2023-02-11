@@ -12,7 +12,6 @@ export class AddRecordDialogComponent {
     harvest: [],
     bunkerFullness: [],
     velocity: [],
-    distanceTraveled: [],
   });
 
   constructor(
