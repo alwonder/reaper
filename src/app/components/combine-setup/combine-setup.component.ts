@@ -18,6 +18,7 @@ export class CombineSetupComponent extends BaseComponent {
     volumeMass: [0],
     /** Коэффициент использования объёма бункера */
     bunkerUsageCoefficient: [0],
+    bunkerVolume: [0],
   })
 
   constructor(
