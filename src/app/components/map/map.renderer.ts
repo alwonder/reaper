@@ -1,5 +1,5 @@
 import { Feature, LineString } from '@turf/helpers';
-import { length, lineSliceAlong } from '@turf/turf';
+import { along, distance, length, lineSliceAlong, lineString } from '@turf/turf';
 import { AnySourceData, GeoJSONSource, LngLat, Map as GLMap } from 'mapbox-gl';
 import { Subject } from 'rxjs';
 import { MapPoint } from '../../types/map.types';
@@ -11,6 +11,8 @@ const mapLayers = {
   COMPLETED: 'completed',
   TILL_FILLING: 'tillFilling',
   REMAINING: 'remaining',
+  REPLACE_DISTANCE: 'replaceDistance',
+  REPLACE_DISTANCE_SYMBOL: 'replaceDistanceSymbol',
 } as const;
 
 const mapLayerColors: Record<keyof typeof mapLayers, string> = {
@@ -20,6 +22,8 @@ const mapLayerColors: Record<keyof typeof mapLayers, string> = {
   COMPLETED: 'rgba(159,215,17,0.55)',
   TILL_FILLING: 'rgba(238,152,36,0.62)',
   REMAINING: 'rgba(71,154,231,0.36)',
+  REPLACE_DISTANCE: 'rgb(238,60,36)',
+  REPLACE_DISTANCE_SYMBOL: 'rgb(255,255,255)',
 }
 
 export class MapRenderer {
@@ -35,6 +39,7 @@ export class MapRenderer {
     this.createCompletedRouteLayer();
     this.createRouteTillFillingLayer();
     this.createRemainingRouteLayer();
+    this.createReplaceDistanceLayer();
 
     this.map.on('click', (event) => {
       this.mapClick$.next(event.lngLat)
@@ -48,12 +53,16 @@ export class MapRenderer {
       this.map.setLayoutProperty(mapLayers.COMPLETED, 'visibility', 'none');
       this.map.setLayoutProperty(mapLayers.TILL_FILLING, 'visibility', 'none');
       this.map.setLayoutProperty(mapLayers.REMAINING, 'visibility', 'none');
+      this.map.setLayoutProperty(mapLayers.REPLACE_DISTANCE, 'visibility', 'none');
+      this.map.setLayoutProperty(mapLayers.REPLACE_DISTANCE_SYMBOL, 'visibility', 'none');
     } else {
       this.map.setLayoutProperty(mapLayers.FIELD, 'visibility', 'visible');
       this.map.setLayoutProperty(mapLayers.FIELD_OUTLINE, 'visibility', 'visible');
       this.map.setLayoutProperty(mapLayers.COMPLETED, 'visibility', 'visible');
       this.map.setLayoutProperty(mapLayers.TILL_FILLING, 'visibility', 'visible');
       this.map.setLayoutProperty(mapLayers.REMAINING, 'visibility', 'visible');
+      this.map.setLayoutProperty(mapLayers.REPLACE_DISTANCE, 'visibility', 'visible');
+      this.map.setLayoutProperty(mapLayers.REPLACE_DISTANCE_SYMBOL, 'visibility', 'visible');
     }
   }
 
@@ -93,6 +102,10 @@ export class MapRenderer {
     (this.map.getSource(mapLayers.REMAINING) as GeoJSONSource).setData(data);
   }
 
+  public updateReplaceDistance(data: Feature<LineString>): void {
+    (this.map.getSource(mapLayers.REPLACE_DISTANCE) as GeoJSONSource).setData(data);
+  }
+
   public updateRoute(route: Feature<LineString>, completed: number, remaining: number): void {
     const overallDistance = length(route);
 
@@ -104,8 +117,18 @@ export class MapRenderer {
 
     if ((completed + remaining) > 0) {
       this.updateTillFilling(lineSliceAlong(route, completed, completed + remaining));
+
+      const endPoint = along(route, completed + remaining);
+
+      this.updateReplaceDistance(lineString([route.geometry.coordinates[0], endPoint.geometry.coordinates]));
+      this.map.setLayoutProperty(
+        mapLayers.REPLACE_DISTANCE_SYMBOL,
+        "text-field",
+        `${distance(route.geometry.coordinates[0], endPoint.geometry.coordinates).toFixed(2)} км`
+      )
     } else {
       this.updateTillFilling(this.getEmptyFeature());
+      this.updateReplaceDistance(this.getEmptyFeature());
     }
 
     this.updateRemaining(lineSliceAlong(route, completed + remaining, overallDistance));
@@ -214,6 +237,39 @@ export class MapRenderer {
         'line-color': mapLayerColors.REMAINING,
         'line-width': 8
       }
+    });
+  }
+
+  private createReplaceDistanceLayer(): void {
+    // Расстояние до места заполнения
+    this.map.addSource(mapLayers.REPLACE_DISTANCE, this.getEmptySourceData());
+
+    this.map.addLayer({
+      id: mapLayers.REPLACE_DISTANCE,
+      type: 'line',
+      source: mapLayers.REPLACE_DISTANCE,
+      layout: {},
+      paint: {
+        'line-color': mapLayerColors.REPLACE_DISTANCE,
+        'line-width': 4,
+        'line-dasharray': [2, 2],
+      },
+    });
+
+    this.map.addLayer({
+      id: mapLayers.REPLACE_DISTANCE_SYMBOL,
+      type: 'symbol',
+      source: mapLayers.REPLACE_DISTANCE,
+      layout: {
+        "symbol-placement": "point",
+        "text-font": ["Open Sans Regular"],
+        "text-field": 'this is a test',
+        "text-size": 16,
+        'text-anchor': 'bottom'
+      },
+      paint: {
+        'text-color': mapLayerColors.REPLACE_DISTANCE_SYMBOL,
+      },
     });
   }
 

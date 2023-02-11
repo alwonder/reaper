@@ -2,7 +2,6 @@ import booleanIntersects from '@turf/boolean-intersects';
 import {
   along,
   bearing,
-  bezierSpline,
   destination,
   Feature,
   featureCollection,
@@ -46,11 +45,11 @@ export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], cap
 
   const path = connectLines(featureCollection(lines));
 
-  // return path;
-  return bezierSpline(path, {
-    resolution: 400000,
-    sharpness: 0.03
-  })
+  return path;
+  // return bezierSpline(path, {
+  //   resolution: 400000,
+  //   sharpness: 0.03
+  // })
 }
 
 /** Получить направление распространения полос траектории */

@@ -22,5 +22,6 @@ export const mapStyle: Style = {
       'minzoom': 0,
       'maxzoom': 22
     }
-  ]
+  ],
+  "glyphs": "http://fonts.openmaptiles.org/{fontstack}/{range}.pbf"
 }
