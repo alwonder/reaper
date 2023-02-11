@@ -1,25 +1,25 @@
 <table class="records">
-  <tr>
-    <th>Скорость</th>
-    <th>Урожайность</th>
-    <th>Заполненность</th>
-    <th>Расстояние</th>
-    <th>Производительность</th>
-    <th>Время заполнения</th>
-    <th>Расстояние до точки</th>
+  <tr class="records__header">
+    <th>Скорость, км/ч</th>
+    <th>Урожайность, Га</th>
+    <th>Заполн. бункера, м<sup>3</sup></th>
+    <th>Расстояние, км</th>
+    <th>Произв-ть, т/ч</th>
+    <th>Время заполнения, ч</th>
+    <th>Расстояние до точки, км</th>
   </tr>
   <tr
     *ngFor="let record of (records$ | async); index as i"
     class="records__record"
     [class.records__record_active]="record === activeRecord"
     (click)="setActiveRecord(i)">
-    <td>{{record.velocity | number:'1.2'}}</td>
-    <td>{{record.harvest | number:'1.2'}}</td>
-    <td>{{record.bunkerVolFullness | number:'1.2'}}</td>
-    <td>{{record.distanceTraveled | number:'1.2'}}</td>
-    <td>{{record.performance | number:'1.2'}}</td>
-    <td>{{record.bunkerFillTime | number:'1.2'}}</td>
-    <td>{{record.bunkerFillDistance | number:'1.2'}}</td>
+    <td>{{record.velocity | number:'1.2-2'}}</td>
+    <td>{{record.harvest | number:'1.2-2'}}</td>
+    <td>{{record.bunkerVolFullness | number:'1.2-2'}}</td>
+    <td>{{record.distanceTraveled | number:'1.2-2'}}</td>
+    <td>{{record.performance | number:'1.2-2'}}</td>
+    <td>{{record.bunkerFillTime | number:'1.2-2'}}</td>
+    <td>{{record.bunkerFillDistance | number:'1.2-2'}}</td>
   </tr>
 </table>
 

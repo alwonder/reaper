@@ -5,7 +5,18 @@
 }
 
 .records {
+  border-spacing: 0;
 
+  .records__header {
+    background-color: #fafafa;
+  }
+
+  th,
+  td {
+    width: 100px;
+    text-align: center;
+    padding: 4px 6px;
+  }
 }
 
 .records__record {
