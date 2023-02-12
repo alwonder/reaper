@@ -106,7 +106,7 @@ export class MapRenderer {
     (this.map.getSource(mapLayers.REPLACE_DISTANCE) as GeoJSONSource).setData(data);
   }
 
-  public updateRoute(route: Feature<LineString>, completed: number, remaining: number): void {
+  public updateRoute(route: Feature<LineString>, completed: number, remaining: number, replacePos: MapPoint): void {
     const overallDistance = length(route);
 
     if (completed) {
@@ -120,11 +120,11 @@ export class MapRenderer {
 
       const endPoint = along(route, completed + remaining);
 
-      this.updateReplaceDistance(lineString([route.geometry.coordinates[0], endPoint.geometry.coordinates]));
+      this.updateReplaceDistance(lineString([replacePos, endPoint.geometry.coordinates]));
       this.map.setLayoutProperty(
         mapLayers.REPLACE_DISTANCE_SYMBOL,
         "text-field",
-        `${distance(route.geometry.coordinates[0], endPoint.geometry.coordinates).toFixed(2)} км`
+        `${distance(replacePos, endPoint.geometry.coordinates).toFixed(2)} км`
       )
     } else {
       this.updateTillFilling(this.getEmptyFeature());
@@ -265,7 +265,8 @@ export class MapRenderer {
         "text-font": ["Open Sans Regular"],
         "text-field": 'this is a test',
         "text-size": 16,
-        'text-anchor': 'bottom'
+        'text-anchor': 'bottom',
+        'text-offset': [0, -0.3]
       },
       paint: {
         'text-color': mapLayerColors.REPLACE_DISTANCE_SYMBOL,

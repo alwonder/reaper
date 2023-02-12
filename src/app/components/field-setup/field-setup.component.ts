@@ -10,6 +10,7 @@ import { HarvestFieldService } from '../../services/harvest-field.service';
 })
 export class FieldSetupComponent implements OnInit {
   public drawMode$ = this.harvestFieldService.drawMode$;
+  public replaceChangeMode$ = this.harvestFieldService.replaceChangeMode$;
   public activeCorner$ = this.harvestFieldService.activeCorner$;
   public corners$: Observable<number[]> = this.harvestFieldService.field$
     .pipe(map((field) => Array(field.length - 1)))
@@ -46,5 +47,11 @@ export class FieldSetupComponent implements OnInit {
 
   public changeRouteDirection(): void {
     this.harvestFieldService.routeDirection$.next(!this.harvestFieldService.routeDirection$.value);
+  }
+
+  public toggleReplaceMode(): void {
+    this.harvestFieldService.replaceChangeMode$.next(
+      !this.harvestFieldService.replaceChangeMode$.value
+    );
   }
 }

@@ -12,10 +12,12 @@ import { CombineProcessingService } from './combine-processing.service';
 })
 export class HarvestFieldService {
   public drawMode$ = new BehaviorSubject<boolean>(false);
+  public replaceChangeMode$ = new BehaviorSubject<boolean>(false);
   public drawModeApply$ = new Subject();
   public drawModeCancel$ = new Subject();
 
   public field$ = new BehaviorSubject<MapPoint[]>(testField);
+  public replacePos$ = new BehaviorSubject<MapPoint>(testField[2]);
   public activeCorner$ = new BehaviorSubject<number>(1);
   public routeDirection$ = new BehaviorSubject<boolean>(true);
 

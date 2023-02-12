@@ -18,7 +18,8 @@
   </ng-container>
 
   <ng-template #viewMode>
-    <button mat-button (click)="enableDrawMode()">Изменить поле</button>
+    <button mat-button [disabled]="replaceChangeMode$ | async" (click)="enableDrawMode()">Изменить поле</button>
+    <button mat-button [disabled]="drawMode$ | async" (click)="toggleReplaceMode()">Изменить точку машины выгрузки</button>
   </ng-template>
 </div>
 

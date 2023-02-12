@@ -71,23 +71,37 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
     combineLatest([
       this.harvestFieldService.fieldRoute$,
       this.recordsRepositoryService.activeRecord$,
+      this.harvestFieldService.replacePos$,
     ])
       .pipe(this.takeUntilDestroy())
-      .subscribe(([route, record]) => this.updateActiveRoute(route, record))
+      .subscribe(([route, record, replace]) => this.updateActiveRoute(route, record, replace))
+
+    this.mapRenderer.mapClick$.pipe(
+      filter(() => this.harvestFieldService.replaceChangeMode$.value),
+      this.takeUntilDestroy()
+    )
+      .subscribe((coords) => {
+      this.harvestFieldService.replacePos$.next([coords.lng, coords.lat]);
+      this.harvestFieldService.replaceChangeMode$.next(false);
+    })
   }
 
   /** Отрисовать маршрут с активной записью с сенсоров */
-  private updateActiveRoute(route: Feature<LineString>, record: CombineProcessingOverallData | null): void {
+  private updateActiveRoute(
+    route: Feature<LineString>,
+    record: CombineProcessingOverallData | null,
+    replacePos: MapPoint,
+  ): void {
     if (!this.mapRenderer) {
       throw new Error('Карта не готова');
     }
 
     if (!record) {
-      this.mapRenderer.updateRoute(route, 0, 0);
+      this.mapRenderer.updateRoute(route, 0, 0, replacePos);
       return;
     }
 
-    this.mapRenderer.updateRoute(route, record.distanceTraveled ?? 0, record.bunkerFillDistance)
+    this.mapRenderer.updateRoute(route, record.distanceTraveled ?? 0, record.bunkerFillDistance, replacePos)
   }
 
   public enableDrawMode(): void {
