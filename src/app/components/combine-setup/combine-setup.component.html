@@ -1,7 +1,7 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
   <p>
     <mat-form-field appearance="standard">
-      <mat-label>Конструктивная ширина захвата уборочной машины</mat-label>
+      <mat-label>Конструктивная ширина захвата</mat-label>
       <input
         matInput
         type="number"
@@ -11,7 +11,7 @@
 
   <p>
     <mat-form-field appearance="standard">
-      <mat-label>Коэффициент использования конструктивной ширины захвата</mat-label>
+      <mat-label>Коэффициент исп. ширины захвата</mat-label>
       <input
         matInput
         type="number"
@@ -49,8 +49,8 @@
     </mat-form-field>
   </p>
 
-  <p>
+  <p class="controls">
     <button mat-button type="submit" [disabled]="form.pristine">Применить</button>
-    <button mat-button [disabled]="form.pristine" (click)="reset()">Сброс</button>
+    <button mat-button [disabled]="form.pristine" (click)="reset()">Отмена</button>
   </p>
 </form>

@@ -5,3 +5,16 @@
   justify-content: center;
   height: 100%;
 }
+
+form {
+  width: 300px;
+
+  .mat-form-field {
+    width: 100%;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: space-between;
+  }
+}

@@ -16,7 +16,7 @@ export class HarvestFieldService {
   public drawModeCancel$ = new Subject();
 
   public field$ = new BehaviorSubject<MapPoint[]>(testField);
-  public activeCorner$ = new BehaviorSubject<number>(0);
+  public activeCorner$ = new BehaviorSubject<number>(1);
   public routeDirection$ = new BehaviorSubject<boolean>(true);
 
   public fieldRoute$: Observable<Feature<LineString>> = combineLatest([

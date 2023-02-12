@@ -3,6 +3,7 @@
     <th>Скорость, км/ч</th>
     <th>Урожайность, Га</th>
     <th>Заполн. бункера, м<sup>3</sup></th>
+    <th>Δ бункера, м<sup>3</sup></th>
     <th>Расстояние, км</th>
     <th>Произв-ть, т/ч</th>
     <th>Время заполнения, ч</th>
@@ -16,10 +17,11 @@
     <td>{{record.velocity | number:'1.2-2'}}</td>
     <td>{{record.harvest | number:'1.2-2'}}</td>
     <td>{{record.bunkerVolFullness | number:'1.2-2'}}</td>
+    <td>{{record.bunkerDelta | number:'1.2-2'}}</td>
     <td>{{record.distanceTraveled | number:'1.2-2'}}</td>
     <td>{{record.performance | number:'1.2-2'}}</td>
-    <td>{{record.bunkerFillTime | number:'1.2-2'}}</td>
-    <td>{{record.bunkerFillDistance | number:'1.2-2'}}</td>
+    <td class="record-cell_emphasize">{{record.bunkerFillTime | number:'1.2-2'}}</td>
+    <td class="record-cell_emphasize">{{record.bunkerFillDistance | number:'1.2-2'}}</td>
   </tr>
 </table>
 

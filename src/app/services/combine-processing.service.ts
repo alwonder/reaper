@@ -27,7 +27,7 @@ export class CombineProcessingService {
   private predefinedDataSource = new BehaviorSubject<CombinePredefinedData>({
     captureConstructionWidth: 9.3,
     captureUsageCoefficient: 0.9,
-    volumeMass: 0.75,
+    volumeMass: 0.73,
     bunkerUsageCoefficient: 0.9,
     bunkerVolume: 10,
   });
