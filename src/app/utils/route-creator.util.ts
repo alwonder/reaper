@@ -26,7 +26,7 @@ export const getFieldRoute = (field: MapPoint[], line: [MapPoint, MapPoint], cap
   // Направление первой полосы, для выравнивания направления всех остальных полос под неё
   const baseBearing = bearing(firstLine.geometry.coordinates[0], firstLine.geometry.coordinates[1]);
   // Массив полос для построения траектории в дальнейшем
-  const lines: Feature<LineString>[] = [firstLine];
+  const lines: Feature<LineString>[] = [normalizeLine(getFieldLine(firstLine, polyFeature, captureWidth), baseBearing)];
 
   let currentLine = firstLine.geometry.coordinates
 
