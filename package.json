@@ -1,6 +1,6 @@
 {
   "name": "reaper-client",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "electron.js",
   "scripts": {
     "ng": "ng",
@@ -9,7 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "pack": "electron-packager ./ reaper-client --platform=win32 --arch=x64 --out=./dist"
+    "pack": "electron-builder build --win --x64",
+    "pack:mac": "electron-builder build --mac"
   },
   "private": true,
   "dependencies": {
@@ -38,7 +39,7 @@
     "@types/mapbox-gl": "^2.6.0",
     "@types/node": "^12.11.1",
     "electron": "^23.0.0",
-    "electron-packager": "^17.1.1",
+    "electron-builder": "^23.6.0",
     "jasmine-core": "~3.8.0",
     "karma": "~6.3.0",
     "karma-chrome-launcher": "~3.1.0",
@@ -46,5 +47,23 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "typescript": "~4.2.3"
+  },
+  "build": {
+    "appId": "com.reaper.client",
+    "asar": true,
+    "directories": {
+      "output": "release/"
+    },
+    "includeSubNodeModules": false,
+    "files": [
+      "dist/**/*",
+      "!node_modules/**/*",
+      "electron.js"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
   }
 }

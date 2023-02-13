@@ -18,12 +18,12 @@ $header-height: 48px;
 }
 
 .map-container {
-  width: 50%;
+  width: 46%;
   height: calc(100vh -  #{$header-height});
 }
 
 .panel-container {
-  width: 50%;
+  width: 54%;
   height: calc(100vh -  #{$header-height});
 
   .mat-tab-group {
