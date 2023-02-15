@@ -1,6 +1,6 @@
 {
   "name": "reaper-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "electron.js",
   "scripts": {
     "ng": "ng",
@@ -9,8 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "pack": "electron-builder build --win --x64",
-    "pack:mac": "electron-builder build --mac"
+    "pack": "ng build && electron-builder build --win --x64",
+    "pack:mac": "ng build && electron-builder build --mac"
   },
   "private": true,
   "dependencies": {
