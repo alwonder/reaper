@@ -15,6 +15,8 @@ export class HarvestFieldService {
   public replaceChangeMode$ = new BehaviorSubject<boolean>(false);
   public drawModeApply$ = new Subject();
   public drawModeCancel$ = new Subject();
+  public goToField$ = new Subject();
+  public goToCoordinates$ = new Subject<MapPoint>();
 
   public field$ = new BehaviorSubject<MapPoint[]>(testField);
   public replacePos$ = new BehaviorSubject<MapPoint>(testField[2]);

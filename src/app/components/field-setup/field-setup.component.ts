@@ -1,14 +1,18 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { HarvestFieldService } from '../../services/harvest-field.service';
+import { MapPoint } from '../../types/map.types';
+import { BaseComponent } from '../base.directive';
+import { GoToFieldDialogComponent } from './go-to-field/go-to-field-dialog.component';
 
 @Component({
   selector: 'app-field-setup',
   templateUrl: './field-setup.component.html',
   styleUrls: ['./field-setup.component.scss']
 })
-export class FieldSetupComponent implements OnInit {
+export class FieldSetupComponent extends BaseComponent implements OnInit {
   public drawMode$ = this.harvestFieldService.drawMode$;
   public replaceChangeMode$ = this.harvestFieldService.replaceChangeMode$;
   public activeCorner$ = this.harvestFieldService.activeCorner$;
@@ -16,8 +20,11 @@ export class FieldSetupComponent implements OnInit {
     .pipe(map((field) => Array(field.length - 1)))
 
   constructor(
+    private dialog: MatDialog,
     private harvestFieldService: HarvestFieldService,
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
   }
@@ -53,5 +60,20 @@ export class FieldSetupComponent implements OnInit {
     this.harvestFieldService.replaceChangeMode$.next(
       !this.harvestFieldService.replaceChangeMode$.value
     );
+  }
+
+  public goToField(): void {
+    this.harvestFieldService.goToField$.next();
+  }
+
+  public goToCoordinates(): void {
+    this.dialog.open(GoToFieldDialogComponent)
+      .afterClosed()
+      .pipe(this.takeUntilDestroy())
+      .subscribe((data?: MapPoint) => {
+        if (!data) return;
+
+        this.harvestFieldService.goToCoordinates$.next(data);
+      })
   }
 }

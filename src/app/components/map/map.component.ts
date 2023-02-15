@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component } from '@angular/core';
-import { Feature, LineString } from '@turf/turf';
+import { center, Feature, LineString, polygon, toMercator } from '@turf/turf';
+import * as mapboxgl from 'mapbox-gl';
 import { Map as GLMap } from 'mapbox-gl';
 import { combineLatest, fromEvent, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
@@ -84,6 +85,28 @@ export class MapComponent extends BaseComponent implements AfterViewInit {
       this.harvestFieldService.replacePos$.next([coords.lng, coords.lat]);
       this.harvestFieldService.replaceChangeMode$.next(false);
     })
+
+    this.harvestFieldService.goToField$
+      .pipe(this.takeUntilDestroy())
+      .subscribe(() => {
+        const fieldCenter = center(polygon([this.harvestFieldService.field$.value]));
+        const cam = this.map.getFreeCameraOptions();
+        cam.position = mapboxgl.MercatorCoordinate.fromLngLat({
+          lng: fieldCenter.geometry.coordinates[0],
+          lat: fieldCenter.geometry.coordinates[1],
+        });
+        this.map.setFreeCameraOptions(cam);
+        this.map.setZoom(14);
+      })
+
+    this.harvestFieldService.goToCoordinates$
+      .pipe(this.takeUntilDestroy())
+      .subscribe((coords) => {
+        const cam = this.map.getFreeCameraOptions();
+        cam.position = mapboxgl.MercatorCoordinate.fromLngLat({ lng: coords[0], lat: coords[1] });
+        this.map.setFreeCameraOptions(cam);
+        this.map.setZoom(14);
+      })
   }
 
   /** Отрисовать маршрут с активной записью с сенсоров */

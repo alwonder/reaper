@@ -1,14 +1,21 @@
-<h3>Активный угол</h3>
-<div class="corner-select">
-  <button
-    *ngFor="let _ of corners$ | async; index as i"
-    mat-button
-    class="corner-select__button"
-    [color]="(activeCorner$ | async) === i ? 'accent' : 'primary'"
-    [class.corner-select__button_active]="(activeCorner$ | async) === i"
-    (click)="setActiveCorner(i)">
-    {{i}}
-  </button>
+<div>
+  <button mat-button (click)="goToCoordinates()">Перейти к координатам...</button>
+  <button mat-button (click)="goToField()">Вернуться к текущему полю</button>
+</div>
+
+<div class="corner">
+  <h3>Активный угол</h3>
+  <div class="corner-select">
+    <button
+      *ngFor="let _ of corners$ | async; index as i"
+      mat-button
+      class="corner-select__button"
+      [color]="(activeCorner$ | async) === i ? 'accent' : 'primary'"
+      [class.corner-select__button_active]="(activeCorner$ | async) === i"
+      (click)="setActiveCorner(i)">
+      {{i}}
+    </button>
+  </div>
 </div>
 
 <div class="change-field">
@@ -19,13 +26,6 @@
 
   <ng-template #viewMode>
     <button mat-button [disabled]="replaceChangeMode$ | async" (click)="enableDrawMode()">Изменить поле</button>
-    <button mat-button [disabled]="drawMode$ | async" (click)="toggleReplaceMode()">Изменить точку машины выгрузки</button>
+    <button mat-button [disabled]="drawMode$ | async" (click)="toggleReplaceMode()">Задать расположение транспортного средства</button>
   </ng-template>
 </div>
-
-
-<!--<button-->
-<!--  mat-raised-button-->
-<!--  (click)="changeRouteDirection()">-->
-<!--  Сменить направление-->
-<!--</button>-->

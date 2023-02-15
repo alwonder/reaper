@@ -1,0 +1,17 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <h2>Перейти к координатам</h2>
+
+  <p>
+    <mat-form-field appearance="standard">
+      <mat-label>Координаты</mat-label>
+      <input
+        matInput
+        [required]="true"
+        formControlName="coordinates">
+    </mat-form-field>
+  </p>
+
+  <p>
+    <button mat-button type="submit" [disabled]="form.pristine">Перейти</button>
+  </p>
+</form>

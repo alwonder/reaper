@@ -10,6 +10,7 @@ import { APP_INITIALIZER } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { AppService } from './app.service';
+import { GoToFieldDialogComponent } from './components/field-setup/go-to-field/go-to-field-dialog.component';
 import { MapComponent } from './components/map/map.component';
 import { BaseComponent } from './components/base.directive';
 import { RecordsTableComponent } from './components/records-table/records-table.component';
@@ -25,18 +26,19 @@ import { FieldSetupComponent } from './components/field-setup/field-setup.compon
     BaseComponent,
     CombineSetupComponent,
     FieldSetupComponent,
+    GoToFieldDialogComponent,
     MapComponent,
     RecordsTableComponent,
   ],
   imports: [
     BrowserModule,
     MatButtonModule,
+    MatCheckboxModule,
     MatDialogModule,
     MatInputModule,
     MatTabsModule,
     NoopAnimationsModule,
     ReactiveFormsModule,
-    MatCheckboxModule,
   ],
   providers: [
     AppService,
